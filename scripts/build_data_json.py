@@ -12,7 +12,7 @@ from collections import Counter
 from pathlib import Path
 
 CSV_PATH    = Path("data/brandwatch/mentions_apr2026.csv")
-OUTPUT_PATH = Path("prototype/data.json")
+OUTPUT_PATH = Path("service/data.json")
 
 PLATFORM_MAP = {
     "twitter":          "X (Twitter)",

@@ -1,0 +1,11 @@
+{
+  "fields": {
+    "project": {"key": "APM"},
+    "summary": "Axi Lighthouse — Social Monitoring & Response",
+    "issuetype": {"name": "Epic"},
+    "description": {
+      "type": "doc", "version": 1,
+      "content": [{"type": "paragraph", "content": [{"type": "text", "text": "Lighthouse v1: monitors public platforms for Axi mentions, classifies each by sentiment and risk tier (L1-L4), creates Jira tickets for L3/L4 mentions, and routes them to the compliance queue for Community Manager review. Covers Reddit, TrustPilot, BrokersView, ForexPeaceArmy, X (Twitter), Google Play, and App Store."}]}]
+    }
+  }
+}

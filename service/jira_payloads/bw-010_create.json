@@ -1,0 +1,321 @@
+{
+  "ticket_id": "DEMO-010",
+  "payload": {
+    "fields": {
+      "project": {
+        "key": "APM"
+      },
+      "summary": "[L2] X (twitter) \u2014 \u3010Axi Select\u3011 30\u5206\u4ee5\u5185\u30c0\u30e1\u301c\u306f\u3055\u3059\u304c\u306b\u4e71\u66b4\u3059\u304e\u307e\u305b\u3093\u304b\uff1f\ud83d\ude05 \u2014 AOI_FX_LOOP",
+      "issuetype": {
+        "name": "Task"
+      },
+      "priority": {
+        "name": "High"
+      },
+      "labels": [
+        "lighthouse",
+        "l2",
+        "x (twitter)"
+      ],
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Mention Details"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Platform: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "X (Twitter)"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Author: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "AOI_FX_LOOP"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Posted at: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "2026-04-01 11:57:51.000"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Engagement: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "4"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "URL: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "http://twitter.com/AOI_FX_LOOP/statuses/2039311276309094440"
+              }
+            ]
+          },
+          {
+            "type": "rule"
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Summary"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "\u3010Axi Select\u3011 30\u5206\u4ee5\u5185\u30c0\u30e1\u301c\u306f\u3055\u3059\u304c\u306b\u4e71\u66b4\u3059\u304e\u307e\u305b\u3093\u304b\uff1f\ud83d\ude05"
+              }
+            ]
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Mention Text (PII-redacted)"
+              }
+            ]
+          },
+          {
+            "type": "blockquote",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "\u3010Axi Select\u3011 30\u5206\u4ee5\u5185\u30c0\u30e1\u301c\u306f\u3055\u3059\u304c\u306b\u4e71\u66b4\u3059\u304e\u307e\u305b\u3093\u304b\uff1f\ud83d\ude05"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "rule"
+          },
+          {
+            "type": "heading",
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Classification"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Sentiment: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "negative"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Sentiment reasoning: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "Negative sentiment from Brandwatch export (X (Twitter))"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Risk tier: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "L2"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Risk reasoning: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "L2: negative mention on X (Twitter) with 4 engagements"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Watch flags: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "\u2014"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Client info detected: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "No"
+              }
+            ]
+          },
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "Lighthouse: ",
+                "marks": [
+                  {
+                    "type": "strong"
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "text": "http://localhost:5000/mention/bw-010"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

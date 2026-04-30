@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir plans *)",
+      "Bash(git mv *)",
+      "Bash(git push *)",
+      "Bash(JIRA_API_TOKEN=\"ATATT3xFfGF0hGL_JR-zUO_Bw2XlNgZUs04BfdoM6LHp8AyfsY4AOOjSExxVae3C4aoBPvHMzS89NaD3Zckkyk0RYGsElwtJtAwTCC-Iol579QcSXtLuEfquUNVGg3FZIwIZqZ-hUuQlPvWcWUq9Ge0dXqhe14uS6I2it5QP0h8gkyUSZDdRfsE=E38DAF83\" python scripts/test_jira.py)",
+      "Bash(python -m pip install requests -q)",
+      "Bash(curl -s -u timur.dosmurzayev@axi.com:ATATT3xFfGF0hGL_JR-zUO_Bw2XlNgZUs04BfdoM6LHp8AyfsY4AOOjSExxVae3C4aoBPvHMzS89NaD3Zckkyk0RYGsElwtJtAwTCC-Iol579QcSXtLuEfquUNVGg3FZIwIZqZ-hUuQlPvWcWUq9Ge0dXqhe14uS6I2it5QP0h8gkyUSZDdRfsE=E38DAF83 https://axitrader.atlassian.net/rest/api/3/issue/createmeta/APM/issuetypes)",
+      "Bash(python -m json.tool)",
+      "Bash(curl *)",
+      "Bash(JIRA_API_TOKEN=\"ATATT3xFfGF0hGL_JR-zUO_Bw2XlNgZUs04BfdoM6LHp8AyfsY4AOOjSExxVae3C4aoBPvHMzS89NaD3Zckkyk0RYGsElwtJtAwTCC-Iol579QcSXtLuEfquUNVGg3FZIwIZqZ-hUuQlPvWcWUq9Ge0dXqhe14uS6I2it5QP0h8gkyUSZDdRfsE=E38DAF83\" python scripts/create_jira_demo_data.py)",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import flask; print\\(flask.__version__\\)\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git pull *)",
+      "Bash(python scripts/build_data_json.py)",
+      "Bash(python *)"
+    ]
+  }
+}

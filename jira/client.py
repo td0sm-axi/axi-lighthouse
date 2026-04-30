@@ -13,7 +13,7 @@ JIRA_API_TOKEN = os.environ.get("JIRA_API_TOKEN", "")
 JIRA_PROJECT_KEY = os.environ.get("JIRA_PROJECT_KEY", "APM")
 JIRA_COMMUNITY_MANAGER_ACCOUNT_ID = os.environ.get("JIRA_COMMUNITY_MANAGER_ACCOUNT_ID", "")
 
-MOCK_PAYLOAD_DIR = Path("data/jira_payloads")
+MOCK_PAYLOAD_DIR = Path("service/jira_payloads")
 
 # Transition IDs confirmed against axitrader.atlassian.net project APM
 TRANSITION_MAP = {

@@ -1,0 +1,8 @@
+{
+  "fields": {
+    "project": {"key": "APM"},
+    "summary": "[TEST] Epic link test - delete me",
+    "issuetype": {"name": "Task"},
+    "parent": {"key": "APM-75"}
+  }
+}

@@ -7,8 +7,8 @@ from flask import Flask, render_template, jsonify
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-lighthouse")
 
-DATA_PATH        = Path("prototype/data.json")
-TICKETED_IDS_PATH = Path("data/ticketed_ids.json")
+DATA_PATH         = Path("service/data.json")
+TICKETED_IDS_PATH = Path("service/ticketed_ids.json")
 
 
 def _load_data() -> dict:

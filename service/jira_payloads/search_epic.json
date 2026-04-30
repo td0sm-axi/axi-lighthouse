@@ -1,0 +1,5 @@
+{
+  "jql": "parent = APM-75 ORDER BY created DESC",
+  "maxResults": 20,
+  "fields": ["summary", "status", "priority", "labels", "created", "assignee"]
+}
