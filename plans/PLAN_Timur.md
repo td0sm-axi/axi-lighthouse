@@ -51,12 +51,11 @@ Every row Timur's layer acts on looks like this. This is the agreed interface be
   "raw_text": "Has anyone else had issues with Axi? My withdrawal has been pending for 3 weeks and support keeps closing my tickets.",
   "summary": "User reports a 3-week pending withdrawal, expresses frustration, and asks if others have had similar experiences.",
   "screenshot_path": "data/screenshots/f47ac10b.png",
-  "category": "withdrawal_complaint",
   "sentiment": "negative",
   "sentiment_reasoning": "Post expresses clear frustration about a delayed withdrawal process.",
   "risk_level": "L3",
   "risk_reasoning": "Withdrawal complaint with regulatory implication. User mentions escalating to a financial regulator if unresolved.",
-  "routing_status": "PENDING_HUMAN_REVIEW",
+  "routing_status": "PENDING_HUMAN_POST",
   "classified_at": "2026-04-30T08:15:32Z",
   "thread_id": "t3_abc123"
 }
@@ -67,170 +66,63 @@ Every row Timur's layer acts on looks like this. This is the agreed interface be
 | Field | Who sets it | Used for |
 |---|---|---|
 | `platform` | Som | Selects posting method + template |
-| `category` | Som / Julie (TBC) | Selects response template |
 | `sentiment` | Julie Stage 1 | Selects response template |
-| `risk_level` | Julie Stage 2 | Routes to auto-reply vs compliance queue |
+| `risk_level` | Julie Stage 2 | Routes to auto-reply vs human queue |
 | `routing_status` | Julie | Entry condition for all of Timur's jobs |
-| `summary` | Som enrichment | Shown in dashboard + Slack alert + Jira ticket |
+| `summary` | Som enrichment | Shown in dashboard + Telegram alert + Jira ticket |
 | `screenshot_path` | Som enrichment | Shown in dashboard + Jira ticket |
 | `thread_id` | Som | Used by thread monitor to poll for replies |
 | `raw_text` | Som | Passed to Claude for response personalisation |
 
-> `category` allowed values (proposed — confirm with Som/Julie): `withdrawal_complaint` · `kyc_issue` · `general_complaint` · `positive_review` · `platform_feedback` · `regulatory_mention`
-
 ---
 
-## Orchestration Flow
+## Component 4a — Response Agent
 
-```
-PostgreSQL mentions table
-         │
-         │  Poll for routing_status IN
-         │  ('PENDING_RESPONSE', 'PENDING_HUMAN_REVIEW')
-         │
-         ▼
-┌─────────────────────┐
-│   Scheduler (daily) │
-│   orchestrator.py   │
-└──────────┬──────────┘
-           │
-           ├─── risk_level IN (L1, L2) ────────────────────────────────────┐
-           │    routing_status = PENDING_RESPONSE                           │
-           │                                                                ▼
-           │                                               ┌───────────────────────────┐
-           │                                               │     Response Agent (4a)   │
-           │                                               │                           │
-           │                                               │  1. Lock: set status      │
-           │                                               │     RESPONDING             │
-           │                                               │  2. Lookup template       │
-           │                                               │     (platform+sentiment   │
-           │                                               │      +category)           │
-           │                                               │  3. Claude personalise    │
-           │                                               │  4. Post via platform API │
-           │                                               │  5. Update DB:            │
-           │                                               │     AUTO_RESPONDED        │
-           │                                               │     + response_url        │
-           │                                               └───────────────────────────┘
-           │                                                          │
-           │                                                          │ Daily
-           │                                                          ▼
-           │                                               ┌───────────────────────────┐
-           │                                               │   Thread Monitor (4a)     │
-           │                                               │                           │
-           │                                               │  Poll platform for new    │
-           │                                               │  replies on thread_id     │
-           │                                               │                           │
-           │                                               │  New reply found?         │
-           │                                               │  → New mention record     │
-           │                                               │  → Julie classifies it    │
-           │                                               │  → If L3/L4: enters       │
-           │                                               │    compliance path ───────┼──┐
-           │                                               └───────────────────────────┘  │
-           │                                                                              │
-           └─── risk_level IN (L3, L4) ────────────────────────────────────┐             │
-                routing_status = PENDING_HUMAN_REVIEW                       │             │
-                                                                            ▼             ▼
-                                                           ┌───────────────────────────────────┐
-                                                           │      Compliance Path (4b)         │
-                                                           │                                   │
-                                                           │  1. Create Jira ticket            │
-                                                           │     (L3=High, L4=Critical)        │
-                                                           │  2. Send Slack/Teams alert        │
-                                                           │     with summary + dashboard link │
-                                                           │  3. Surface in /compliance queue  │
-                                                           │                                   │
-                                                           │  Human actions:                   │
-                                                           │  ┌──────────────────────────┐     │
-                                                           │  │ Draft Response           │     │
-                                                           │  │ Claude generates text    │     │
-                                                           │  │ Human copies + posts     │     │
-                                                           │  └──────────────────────────┘     │
-                                                           │  ┌──────────────────────────┐     │
-                                                           │  │ Escalate                 │     │
-                                                           │  │ Jira priority → Critical │     │
-                                                           │  │ 2nd Slack alert          │     │
-                                                           │  └──────────────────────────┘     │
-                                                           │  ┌──────────────────────────┐     │
-                                                           │  │ Dismiss                  │     │
-                                                           │  │ Jira closed              │     │
-                                                           │  │ Removed from queue       │     │
-                                                           │  └──────────────────────────┘     │
-                                                           └───────────────────────────────────┘
-                                                                            │
-                                                                            │ Hourly
-                                                                            ▼
-                                                           ┌───────────────────────────────────┐
-                                                           │       Jira Sync (5)               │
-                                                           │                                   │
-                                                           │  Poll Jira for ticket status      │
-                                                           │  Write back to mentions.jira_status│
-                                                           │  READ-ONLY — never modifies Jira  │
-                                                           └───────────────────────────────────┘
-```
+For mentions where `routing_status = PENDING_AUTO_RESPOND` or `routing_status = PENDING_HUMAN_POST`.
 
----
-
-## Template Selection Logic
-
-```
-mention.platform  +  mention.sentiment  +  mention.category
-         │                   │                     │
-         └───────────────────┴─────────────────────┘
-                             │
-                             ▼
-              SELECT template_text FROM response_templates
-              WHERE platform = ? AND sentiment = ? AND category = ?
-                             │
-                    ┌────────┴────────┐
-                    │                 │
-                 FOUND            NOT FOUND
-                    │                 │
-                    ▼                 ▼
-            Claude call:       Flag mention as
-            personalise        REPLY_FAILED
-            opening 1-2        Surface on dashboard
-            sentences          Do NOT skip silently
-                    │
-                    ▼
-            Final response =
-            personalised_opening + template_body
-```
-
-**Proposed template matrix** (cells = template exists / needs writing):
-
-| Category | Positive | Negative | Neutral |
-|---|---|---|---|
-| positive_review | ✅ thank you + brand | — | — |
-| general_complaint | — | ✅ ack + support link | ✅ ack + support link |
-| withdrawal_complaint | — | ✅ ack + resolution path | ✅ ack + resolution path |
-| kyc_issue | — | ✅ ack + KYC support | — |
-| platform_feedback | ✅ thank you | ✅ ack + roadmap note | — |
-| regulatory_mention | — | ❌ L3/L4 — compliance only | — |
-
-All templates need to be written and approved before Phase 4 implementation begins.
-
----
-
-## Component 4a — Response Agent (L1 / L2)
-
-For mentions where `routing_status = PENDING_RESPONSE`.
+- `LOGGED_ONLY` — no response generated; mention is counted in stats and digest only (positive reviews on non-app-store platforms)
+- `PENDING_AUTO_RESPOND` — draft generated and posted automatically (L1/L2 on standard platforms; positive App Store reviews)
+- `PENDING_HUMAN_POST` — draft generated and queued; Community Manager approves and posts (L4, client info, pending reply, forum mentions)
 
 **Flow:**
-1. Read mention from DB (platform, raw_text, summary, sentiment, risk_level, **category**)
+1. Read mention from DB (platform, raw_text, summary, sentiment, risk_level, routing_status)
 2. Select the correct response template from `response_templates` table based on platform + sentiment + category
-3. Claude call — personalise the opening 1–2 sentences of the template to the specific mention
-4. Post the reply via the platform's API
-5. Update DB: set `response_text`, `response_posted_at`, `response_url`, `routing_status = AUTO_RESPONDED`
+3. Claude call — personalise the template to the specific mention and write the full response in the **same language as the original mention** (use `detected_language` from Julie's layer). Templates are authored in English; Claude translates as part of the personalisation call. English mentions skip the translation cost. This rule applies to all responses — auto-posted and human-approved.
+4. If `PENDING_AUTO_RESPOND`: post reply via platform API → update DB: `response_text`, `response_posted_at`, `response_url`, `routing_status = AUTO_RESPONDED`
+5. If `PENDING_HUMAN_POST`: save draft to DB → surface in dashboard approval queue → human clicks post → same DB update
+
+---
+
+### Brand Voice & Tone
+
+All responses — auto-posted and human-approved — must follow the Axi brand voice:
+
+- **Polite and professional**: never defensive, never dismissive, never casual
+- **Corporate but human**: warm and empathetic without being informal; acknowledge the person, not just the issue
+- **Solution-oriented**: every response should offer a clear next step (support link, email, callback, escalation path) — never a dead end
+- **Consistent with Axi's website tone**: measured, confident, regulated-industry appropriate
+- **No discounts, no admissions of fault, no legal commitments** in any auto-generated response — these require human review
+
+These constraints must be encoded directly in the Claude system prompt for the personalisation call. Claude is not given latitude on tone or language — the prompt enforces both.
+
+**Language rule:** responses are always written in the same language as the original mention. `detected_language` (ISO 639-1) is passed to Claude in the prompt. English mentions receive English responses; all others receive a response in their language. No exceptions.
+
+Prompt file: `prompts/response_personalise.txt`
+
+---
 
 > **Note on `category` field:** Category is assigned upstream — by Som's enrichment layer or Julie's classification pipeline — and arrives as a pre-populated field. Timur's response agent consumes it but does not determine it. Coordinate with Som and Julie to confirm the field name, allowed values, and which stage sets it.
 
 **Template categories (to be written before Phase 4 ships):**
 
-| Category | Trigger | Template purpose |
-|---|---|---|
-| Positive review | sentiment = positive | Thank you + brand reinforcement |
-| General complaint L1 | risk_level = L1, negative | Acknowledgement + support link |
-| Minor product complaint L2 | risk_level = L2, negative | Acknowledgement + resolution path |
+| Category | Trigger | Routing | Template purpose |
+|---|---|---|---|
+| Positive review — App Store | sentiment = positive, platform = google_play or app_store | `PENDING_AUTO_RESPOND` | Thank you + brand reinforcement, encourage rating |
+| Positive review — other platforms | sentiment = positive, platform = anything else | `LOGGED_ONLY` | No response — counted only |
+| General complaint L1 | risk_level = L1, negative | `PENDING_AUTO_RESPOND` | Acknowledgement + support link |
+| Minor product complaint L2 | risk_level = L2, negative | `PENDING_AUTO_RESPOND` | Acknowledgement + resolution path |
+| L4 / client identified | risk_level = L4 or has_client_info | `PENDING_HUMAN_POST` | Empathetic acknowledgement + escalation to private support — no detail discussed publicly |
+| Forum mention | platform in FORUM_PLATFORMS | `PENDING_HUMAN_POST` | Community-appropriate acknowledgement + invite to contact support privately |
 
 **Per-platform posting methods:**
 
@@ -258,30 +150,101 @@ File: `response/agent.py`, `response/poster.py`, `response/templates.py`, `respo
 
 ---
 
-## Component 4b — Compliance Queue (L3 / L4)
+## Component 4c — Immediate Notifications (L3 / L4)
 
-For mentions where `routing_status = PENDING_HUMAN_REVIEW`.
+Triggered the moment Julie's classification pipeline writes `risk_level = L3` or `risk_level = L4` to the DB — before the community manager next opens the dashboard.
 
-- Jira ticket created immediately (see Component 5)
-- Slack/Teams alert sent immediately (see Component 4c)
-- No automated response posted — ever
-- Dashboard `/compliance` page shows the queue with three actions:
-  - **Draft response** — system generates a draft reply using the appropriate template + Claude personalisation. Dashboard displays the draft text for the human to copy-paste and post manually on the platform. The system does **not** post on behalf of the human.
-  - **Escalate** — routes to Legal, updates Jira priority, sends a second Slack/Teams alert
-  - **Dismiss** — marks as not actionable, closes Jira ticket, removed from compliance queue
+**Channels:**
+- **Telegram** — message sent to the community manager's Telegram via Bot API. Fires for every L3 and L4.
+- **Email** — backup alert to the community manager's email address via SMTP. Same trigger.
+
+**Telegram message format:**
+```
+🔴 [L4] TrustPilot — Action required
+"[first 100 chars of mention text]..."
+Platform: TrustPilot | Engagement: 847
+Draft response ready. Open: https://lighthouse.axi.com/mention/1234
+```
+
+```
+🟠 [L3] Reddit r/Forex — Review needed
+"[first 100 chars of mention text]..."
+Platform: Reddit | Engagement: 312
+Draft response ready. Open: https://lighthouse.axi.com/mention/5678
+```
+
+Link uses `DASHBOARD_URL` from `.env` — update this to the live domain before deploying.
+
+**Rules:**
+- L4 → Telegram + email, immediately on classification
+- L3 → Telegram + email, immediately on classification
+- L1 / L2 → no notification; dashboard only
+- If Telegram delivery fails → email is sent regardless (fallback, not replacement)
+- Notifications are logged to DB (`notifications` table) with `sent_at`, `channel`, `status`
+
+**SLA & Reminder Rules:**
+
+| Clock | Action |
+|---|---|
+| T+0 | L3/L4 classified → immediate Telegram + email alert |
+| T+12h | Still unresolved → reminder Telegram + email ("Action still required") |
+| T+24h | Still unresolved → final escalation alert to **Julie** ("SLA breached — 24h without response") |
+| Any time | Community Manager marks as `not_relevant` or `wont_respond` → all future reminders suppressed |
+
+- "Unresolved" means `resolution_status IS NULL` — i.e. no action taken (not posted, not dismissed, not escalated)
+- Once any manual resolution is set, the reminder job skips that mention permanently
+- The 12-hour reminder repeats every 12 hours until either the SLA is breached or the mention is resolved — it does not stop after the first reminder
+
+**Reminder message format (Telegram):**
+```
+⏰ [L3] Reminder — action still required (12h)
+TrustPilot: "[first 80 chars]..."
+Draft response waiting. Open: http://lighthouse.internal/mention/1234
+```
+
+No inline Telegram action buttons — link only. All actions (approve, edit, dismiss, escalate) are taken inside the dashboard after tapping the link.
+
+**Resolution statuses (set by Community Manager in dashboard):**
+- `responded` — reply posted (set automatically when Approve & Post is clicked)
+- `escalated` — routed to Legal (reminders suppressed; Jira priority updated)
+- `not_relevant` — mention does not require a response (e.g. clearly spam, already handled offline)
+- `wont_respond` — deliberate decision not to respond publicly
+
+All resolutions require a one-line reason to be typed before confirming — logged to DB for audit purposes.
+
+**Environment variables:**
+```
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=            # community manager's chat ID
+NOTIFICATION_EMAIL=          # community manager's email
+ESCALATION_TELEGRAM_CHAT_ID= # Julie's Telegram chat ID — receives SLA breach alerts
+ESCALATION_EMAIL=            # Julie's email — julie.sharova@axi.com
+DIGEST_RECIPIENTS=julie.sharova@axi.com  # comma-separated; Julie is always included
+WATCH_SPIKE_COUNT=3          # flag if a watch-list term appears in ≥N mentions in 7 days
+WATCH_SPIKE_MULTIPLIER=2     # flag if a term doubles week-on-week
+SLA_HOURS=24                 # hours before SLA breach alert (default 24)
+REMINDER_INTERVAL_HOURS=12   # hours between reminders (default 12)
+```
+
+File: `notifications/telegram.py`, `notifications/email.py`, `notifications/dispatcher.py`, `notifications/sla_checker.py`
 
 ---
 
-## Component 4c — Slack / Teams Alert (L3 / L4)
+## Component 4b — Human Post Queue (L3 / L4 + Forums)
 
-Triggered immediately when a mention is classified L3 or L4.
+For mentions where `routing_status = PENDING_HUMAN_POST`.
 
-- Send a message to a configured Slack channel or Teams webhook
-- Message includes: platform, risk tier, mention URL, one-line summary, link to dashboard compliance page
-- Second alert sent if a mention is **escalated** from L3 to L4 by a human in the dashboard
-- Config: support both Slack (incoming webhook URL) and Teams (webhook URL) — one is active at a time, set via `.env`
+**Owner: Community Manager.** The community manager is the sole approver for this queue. All drafts land here for their review before anything is published.
 
-File: `notifications/slack.py` or `notifications/teams.py`
+- Jira ticket created immediately (see Component 5) and assigned to the community manager
+- Response draft is auto-generated by the Response Agent — the community manager reviews, not writes
+- Dashboard `/compliance` page shows two sub-queues:
+  - **Pending post** — draft ready, awaiting community manager approval to publish
+  - **Needs review** — edge cases flagged by the agent (e.g. language detection failed, platform API unavailable)
+- Three actions per mention:
+  - **Approve & post** — publishes the draft via platform API, updates DB and Jira
+  - **Edit & post** — community manager edits the draft before posting
+  - **Escalate** — routes to Legal, updates Jira priority, suppresses any response
 
 ---
 
@@ -291,8 +254,8 @@ File: `notifications/slack.py` or `notifications/teams.py`
 
 | Tier | Jira status on creation | Priority |
 |---|---|---|
-| L3 | `PENDING_HUMAN_REVIEW` | High |
-| L4 | `PENDING_HUMAN_REVIEW` | Critical |
+| L3 | `PENDING_HUMAN_POST` | High |
+| L4 | `PENDING_HUMAN_POST` | Critical |
 
 > L1 and L2 mentions do **not** get Jira tickets. They are tracked in the Lighthouse dashboard only. If a follow-up reply to an L1/L2 auto-response escalates to L3/L4, the new mention gets a Jira ticket at that point.
 
@@ -302,13 +265,38 @@ File: `notifications/slack.py` or `notifications/teams.py`
 - Summary
 - Raw text (PII-redacted version)
 - Classification reasoning (from Julie's pipeline)
-- Sentiment + risk tier + category
+- Sentiment + risk tier
+- Drafted response text (for `PENDING_HUMAN_POST` mentions)
+
+**Ticket assignment:**
+- L3/L4 pending post: assigned to community manager as the action owner
+
+**Response logging to Jira (automatic, fires immediately on post):**
+
+When a response is posted — either auto-posted or approved and posted by the Community Manager — the system immediately adds a comment to the Jira ticket:
+
+```
+Response posted by: [Community Manager / Auto-agent]
+Platform: TrustPilot
+Posted at: 2026-04-30 14:32 UTC
+Response URL: https://trustpilot.com/...
+
+Response text:
+"[full response text]"
+```
+
+Ticket status is also updated automatically:
+- `AUTO_RESPONDED` if posted by the agent
+- `RESPONDED` if posted by the Community Manager
+- `ESCALATED` / `DISMISSED` / `NOT_RELEVANT` if a manual resolution was set without posting
+
+No manual Jira updates required — every action taken in the dashboard is reflected in Jira automatically.
 
 **Jira sync job (runs hourly):**
-- Polls Jira API for updated ticket statuses
+- Polls Jira API for any status changes made directly in Jira (e.g. Legal moves a ticket)
 - Writes current status back to `mentions.jira_status` in PostgreSQL
 - Read-only from Jira's perspective — never modifies Jira state
-- This keeps the dashboard in sync without relying on Jira webhooks
+- This keeps the dashboard in sync with any manual Jira changes
 
 File: `jira/client.py`, `jira/sync.py`
 
@@ -316,16 +304,68 @@ File: `jira/client.py`, `jira/sync.py`
 
 ## Component 6 — Flask Dashboard
 
-HTTP basic auth on all routes. Credentials from `.env`.
+**Authentication: Flask-Login with persistent sessions.**
+
+Replaces HTTP Basic Auth (which prompts every browser session). Users log in once via a `/login` form and stay logged in across sessions via a long-lived remember-me cookie.
+
+- Login page: `/login` — username + password form, "Remember me" checkbox ticked by default
+- Session persists for 30 days (configurable via `SESSION_LIFETIME_DAYS`)
+- All other routes redirect to `/login` if not authenticated
+- Logout: `/logout` — clears the session cookie
+- Credentials still stored in `.env` (`DASHBOARD_USERNAME`, `DASHBOARD_PASSWORD`) — no database user table needed for a single-user setup
+- Cookie is `HttpOnly` and `Secure` (HTTPS only); `SameSite=Lax`
+
+**Public deployment requirements (dashboard is internet-facing):**
+- **HTTPS mandatory** — serve behind a reverse proxy (nginx or Caddy) with a valid TLS certificate (Let's Encrypt). Never expose Flask directly on port 80/443.
+- **Strong credentials** — `DASHBOARD_PASSWORD` must be at least 20 characters, randomly generated. Not stored in plaintext anywhere other than `.env`.
+- **Login rate limiting** — max 5 failed attempts per IP per 10 minutes before a 10-minute lockout. Implemented via `Flask-Limiter`.
+- **`SECRET_KEY`** — minimum 32 random bytes, generated once and stored in `.env`. Never committed to git.
+- **No sensitive data in URLs** — mention IDs are integers, no tokens or PII in query strings.
+
+```
+SESSION_LIFETIME_DAYS=30     # how long the remember-me cookie lasts
+SECRET_KEY=                  # min 32 random bytes — generate with: python -c "import secrets; print(secrets.token_hex(32))"
+DASHBOARD_URL=               # public URL e.g. https://lighthouse.axi.com — used in Telegram alert links
+LOGIN_MAX_ATTEMPTS=5         # failed logins before lockout
+LOGIN_LOCKOUT_MINUTES=10
+```
 
 | Route | Purpose |
 |---|---|
-| `/` | Overview — mention counts by tier, platform, routing status |
+| `/` | Overview — mention counts by tier, platform, routing status, watch list spike summary, classification error count |
 | `/mentions` | Full filterable mention list (filter by platform, tier, status, date) |
 | `/mention/<id>` | Detail view — screenshot, raw text, summary, classification, Jira ticket link |
 | `/compliance` | L3/L4 queue — approve / escalate / dismiss controls |
+| `/watchlist` | All mentions that matched at least one watch-list term — see below |
+| `/errors` | All mentions where classification failed — error message, raw text, retry button |
 | `/tickets` | All Jira tickets and current sync'd status |
 | `/runs` | Crawler run history with mention counts and errors |
+
+**Watch List view (`/watchlist`):**
+
+- Shows all mentions where `watch_flags IS NOT NULL`, newest first
+- Filter bar across the top: one button per watch term (FCA, CySEC, ASIC, DFSA, Pepperstone, FxPro, CMC Markets, Capital.com, withdrawal, spread, leverage, KYC, margin call, scam, fraud, compensation, investigation) — click to filter to that term only
+- Each mention row shows: matched terms (as badges), platform, tier, sentiment, engagement, snippet, date
+- Week-on-week count per term shown at the top of the page — terms spiking above threshold highlighted in red
+- Exportable to CSV from this view
+
+**Overview dashboard watch list panel (`/`):**
+
+A compact panel on the main dashboard showing this week's watch list at a glance — visible the moment you log in:
+
+- One row per watch-list term that has at least one mention this week
+- Columns: term | this week | last week | trend (↑ ↓ —) | highest tier hit
+- Terms spiking above threshold shown in red; stable terms in grey; terms with no mentions this week hidden
+- "View all →" link goes to `/watchlist` filtered to that term
+- Terms with zero mentions all week are collapsed into a "X terms quiet this week" line at the bottom
+
+**Overview dashboard error panel (`/`):**
+- Count of mentions currently in `classification_status = error`
+- If count > 0: shown in red with "View errors →" link to `/errors`
+- If count = 0: shown in green "All mentions classified"
+- Retry button on each `/errors` row — resets `classification_status = NULL` and `classified_at = NULL` so the 60-second poll picks it up again automatically
+
+**Mobile-friendly:** all dashboard views must be fully usable on a phone. The Community Manager receives a Telegram alert and should be able to open the dashboard link, review the draft, and tap Approve & Post without needing a desktop. Priority views for mobile: `/compliance` (approve/post queue), `/mention/<id>` (detail + action buttons), `/` (overview + watch list panel). Layout: single-column on mobile, responsive grid on desktop. Touch targets minimum 44px. No horizontal scrolling.
 
 File: `app.py`, `templates/`, `static/`
 
@@ -337,14 +377,61 @@ APScheduler running in-process within the Flask app.
 
 | Job | Cadence | What it does |
 |---|---|---|
-| Crawler + enrichment | Daily | Triggers Som's crawlers across all platforms |
-| Classification | Daily (after crawl) | Triggers Julie's pipeline on all unclassified mentions |
-| Response agent | Daily (after classify) | Posts L1/L2 replies |
+| Crawler + enrichment | Every 30 minutes | Triggers Som's crawlers across all platforms; new mentions written to DB immediately |
+| Classification | Continuous | Julie's pipeline polls for unclassified mentions every 60 seconds; classifies and routes each one as it arrives — no batching |
+| Response agent | Continuous | Polls for `PENDING_AUTO_RESPOND` mentions every 60 seconds; posts replies as they are classified |
+| Notifications | Event-driven | Fires immediately when classification writes L3 or L4 — no polling delay |
+| SLA checker | Every 12 hours | Finds unresolved L3/L4 mentions; sends reminders at 12h intervals; sets `sla_breached = True` and fires escalation alert at 24h |
 | Thread monitor | Daily | Checks for new replies on all AUTO_RESPONDED threads |
 | Jira sync | Hourly | Syncs Jira ticket statuses to local DB |
-| Weekly digest email | Monday 08:00 | Summary email to stakeholders (future phase) |
+| Weekly digest email | Monday 08:00 | Weekly summary to Julie + `DIGEST_RECIPIENTS` — what Axi responded to, what was left unanswered, what's trending |
 
 File: `scheduler.py`
+
+---
+
+## Component 8 — Weekly Digest
+
+Sent every Monday at 08:00 to Julie (julie.sharova@axi.com) + `DIGEST_RECIPIENTS`.
+
+**Digest sections (in order):**
+
+**1. What Axi responded to this week**
+- All mentions where `resolution_status = responded` in the past 7 days
+- Grouped by platform, sorted by tier (L4 → L3 → L2 → L1)
+- Shows: platform, tier, snippet, response posted, engagement count
+
+**2. What was left unanswered**
+- All L3/L4 mentions still `PENDING_HUMAN_POST` or with `sla_breached = True`
+- Flagged clearly — these are the open risks heading into the new week
+- Includes time open and whether an SLA breach occurred
+
+**3. What's trending**
+- Top 5 platforms by mention volume this week vs. last week
+- Top 5 mentions by engagement (regardless of tier)
+- Any platform showing a significant spike (>50% increase week-on-week)
+- Sentiment breakdown: % positive / negative / neutral across all mentions
+
+**Watch list — flagged automatically if appearing in mentions alongside Axi:**
+
+| Category | Terms to watch |
+|---|---|
+| Regulators | FCA, CySEC, ASIC, DFSA |
+| Competitors | Pepperstone, FxPro, CMC Markets, Capital.com |
+| Topics | withdrawal, spread, leverage, KYC, margin call, scam, fraud, compensation, investigation |
+
+Any mention containing a watch-list term is highlighted in the trending section with a count for the week. A spike is flagged if a term appears in >3 mentions in 7 days or doubles week-on-week. These thresholds are configurable via env vars (`WATCH_SPIKE_COUNT=3`, `WATCH_SPIKE_MULTIPLIER=2`).
+
+**4. Numbers at a glance**
+- Total mentions this week
+- L4 / L3 / L2 / L1 counts
+- Total positive reviews | Total negative reviews | Total neutral
+- Responded vs. unanswered vs. dismissed
+- SLA breaches
+
+Format: HTML email, same dark-themed styling as Lighthouse v0.01 digest. Built by Claude from the weekly DB query — not a static template.
+
+File: `digest/builder.py`, `digest/sender.py`, `prompts/digest_summary.txt`
 
 ---
 
@@ -356,10 +443,13 @@ mentions
   response_text           str | None
   response_posted_at      datetime | None
   response_url            str | None
-  thread_id               str | None       ← platform-specific thread/post ID for thread monitoring
-  jira_ticket_id          str | None       ← only set for L3/L4
-  jira_status             str | None       ← only set for L3/L4
-  slack_alert_sent        bool             ← only true for L3/L4
+  thread_id               str | None       (platform-specific thread/post ID for thread monitoring)
+  jira_ticket_id          str | None       (only set for L3/L4)
+  jira_status             str | None       (only set for L3/L4)
+  resolution_status       str | None    ("responded" / "escalated" / "not_relevant" / "wont_respond")
+  resolution_reason       str | None    (one-line reason, required before any resolution is saved)
+  resolved_at             datetime | None
+  sla_breached            bool          (set True when 24h passes without resolution)
   updated_at              datetime
 
 response_templates
@@ -368,43 +458,63 @@ response_templates
   sentiment               str
   category                str              ← value provided by Som/Julie upstream
   template_text           str
+
+notifications
+  id                      UUID, primary key
+  mention_id              int (FK → mentions)
+  channel                 str              ("telegram" / "email")
+  sent_at                 datetime
+  status                  str              ("sent" / "failed")
+  error                   str | None
 ```
 
 ---
 
-## Planning Checklist
+## Build Checklist
 
-### Design Decisions to Confirm
-- [ ] **Response template ownership** — who writes the actual template text? Timur builds the system, but the brand voice needs to come from someone with authority on Axi comms tone. Confirm who approves templates before they go live.
-- [ ] **Auto-posting risk** — L1/L2 auto-reply posts publicly on behalf of Axi with no human approval. Confirm this is accepted by stakeholders. One misclassification posting the wrong template is a brand risk.
-- [ ] **TrustPilot owner reply** — TrustPilot owner replies require a logged-in business account. Confirm Axi has one and credentials are obtainable. Playwright posting a TrustPilot reply is fragile.
-- [ ] **Jira project key** — which project handles CX mentions? Which handles Legal/regulatory? Confirm with the Jira admin.
-- [ ] **Jira ticket assignee** — who gets assigned L3 tickets? Who gets L4? Is this a fixed person or a team queue?
-- [ ] **Compliance queue actions** — "Approve response" on an L3 means a human posts manually. What platform? What account? Does the dashboard just show the drafted text, or does it also handle posting?
-- [ ] **Screenshot storage** — local disk won't scale and won't survive a server restart. Confirm cloud storage (S3 or GCS) is available, or document that local disk is acceptable for v1.
-- [ ] **Dashboard access** — who gets access? Internal only? Does it need to be reachable externally (requires proper hosting, not just localhost)?
+### Phase 4 — Response & Escalation
+- [ ] `prompts/response_personalise.txt` — Claude personalisation prompt enforcing Axi brand voice (polite, corporate, solution-oriented, no fault admissions)
+- [ ] `response/templates.py` — seed `response_templates` table with initial templates (5 categories × platforms)
+- [ ] `response/agent.py` — select template, Claude personalisation call (respects `detected_language`), route to auto-post or human queue
+- [ ] `response/poster.py` — per-platform posting (Reddit, X, Meta, TrustPilot); flag app-store mentions as manual
+- [ ] Human post queue: draft saved to DB, surfaced in `/compliance` with Approve & Post / Edit & Post / Escalate controls
+- [ ] `notifications/telegram.py` — Telegram Bot API, send formatted L3/L4 alert
+- [ ] `notifications/email.py` — SMTP alert, same trigger
+- [ ] `notifications/dispatcher.py` — called by classification pipeline on L3/L4 write; Telegram first, email as fallback; log to `notifications` table
+- [ ] `notifications/sla_checker.py` — runs every 12h; finds unresolved L3/L4 (`resolution_status IS NULL`); sends reminder; sets `sla_breached = True` and fires escalation alert at 24h
+- [ ] Dashboard resolution controls: Not Relevant / Won't Respond / Escalate buttons — require one-line reason before saving; sets `resolution_status`, `resolution_reason`, `resolved_at`
+- [ ] Add `resolution_status`, `resolution_reason`, `resolved_at`, `sla_breached` columns to DB schema
 
-### Edge Cases to Resolve
-- [ ] **Auto-reply to a deleted mention** — by the time the response agent runs, the original post was deleted. Posting a reply fails. What happens? Mark as `REPLY_FAILED`? Retry? Create Jira ticket anyway?
-- [ ] **Platform API rejects the reply** — rate limit hit, or account flagged for automated activity. How do we detect, log, and surface this failure?
-- [ ] **Same mention replied to twice** — pipeline runs, posts reply, but `routing_status` update fails. Next run picks up the same mention again and posts a second reply. Idempotency: set `routing_status = RESPONDING` (in-progress lock) before the post attempt, only move to `AUTO_RESPONDED` on success.
-- [ ] **L3 compliance queue: dismiss then reappear** — a mention is dismissed, but the same complaint is reposted by the same user. New mention or same one? Does dismiss carry over?
-- [ ] **Jira ticket creation fails** — Jira is down or auth expires. The mention is classified L3 but no ticket is created. It sits in `PENDING_HUMAN_REVIEW` indefinitely with no Jira reference. How do we detect and retry?
-- [ ] **Jira sync conflicts** — human closes a ticket in Jira, but our sync overwrites it. Sync is read-only from Jira: it updates local DB from Jira state, never the other way.
-- [ ] **Dashboard screenshot missing** — screenshot failed during enrichment. Mention detail page must show a placeholder, not a broken image.
-- [ ] **Response template has no match** — mention arrives with a platform + sentiment + category combo that has no template. Response agent must not silently skip — flag as `REPLY_FAILED` and surface on dashboard.
-- [ ] **Scheduler overlap** — daily crawl takes longer than 24 hours. Next crawl fires before previous finishes. APScheduler `max_instances=1` per job prevents overlap; second trigger is skipped and logged.
-- [ ] **App store and forum mentions (manual response required)** — these pile up with no notification. Need a dedicated dashboard badge or count on the `/mentions` page filtered by `routing_status = MANUAL_RESPONSE_NEEDED`.
-- [ ] **Multiple mentions from same author on same platform** — coordinated complaint by one person. Responding to all with the same template looks spammy. Define per-author reply rate limit (e.g. max 1 auto-reply per author per platform per 7 days).
-- [ ] **Thread monitor: platform doesn't expose reply thread** — some platforms (TrustPilot, app stores) don't have a reply-thread API. Thread monitoring is only possible on platforms where replies are accessible. Document which platforms support it.
-- [ ] **Slack/Teams webhook failure** — alert not delivered when L3/L4 is created. Mark `slack_alert_sent = false`, retry on next Jira sync cycle. Dashboard must visually flag mentions where alert delivery failed.
+### Phase 5 — Jira Integration
+- [ ] `jira/client.py` — Jira Cloud REST API v3, ticket creation with all required fields
+- [ ] `jira/client.py` — `add_response_comment()` — posts response text + metadata as a Jira comment immediately when a response is published; updates ticket status automatically
+- [ ] `jira/sync.py` — hourly poll, write status back to `mentions.jira_status`
+- [ ] Add `jira_ticket_id`, `jira_status`, `updated_at` columns to DB schema
 
-### Logic to Validate
-- [ ] Walk through the full auto-reply flow on paper: a mention arrives as `PENDING_RESPONSE` → template selected → Claude call → post → DB update. At what point is `routing_status` updated? Before or after posting? (If after, and posting succeeds but DB write fails, we post twice.)
-- [ ] Walk through the full compliance flow: L3 mention arrives → Jira ticket created → `PENDING_HUMAN_REVIEW` set → human dismisses in dashboard → what exact DB and Jira state results?
-- [ ] Confirm the scheduler job order is strictly: crawl → classify → respond. If classify hasn't finished, the respond job must not run.
-- [ ] Confirm Jira sync is read-only from Jira's perspective — it must never modify Jira state, only read it.
-- [ ] Confirm that the dashboard compliance queue shows only L3/L4 and never surfaces an L1/L2 that was auto-responded.
+### Phase 6 — Dashboard
+- [ ] `app.py` — Flask app, Flask-Login setup, persistent session cookie (30-day remember-me), Flask-Limiter on `/login` (5 attempts / 10 min lockout)
+- [ ] `templates/login.html` — login form with remember-me checkbox ticked by default
+- [ ] nginx/Caddy config — reverse proxy with TLS termination, HTTPS enforced, HTTP → HTTPS redirect
+- [ ] `templates/base.html` — shared responsive layout (Bootstrap 5 or equivalent), mobile-first, no horizontal scrolling
+- [ ] `templates/index.html` — overview stats including watch list spike panel (see below)
+- [ ] `templates/mentions.html` — filterable mention list
+- [ ] `templates/mention_detail.html` — single mention with screenshot + classification
+- [ ] `templates/compliance.html` — L3/L4 queue with action controls
+- [ ] `templates/watchlist.html` — watch-list view with term filter buttons, spike indicators, CSV export
+- [ ] `templates/errors.html` — failed classifications list with error message, raw text snippet, and Retry button (requeues mention for classification)
+- [ ] `templates/tickets.html` — Jira ticket list
+- [ ] `templates/runs.html` — crawler run history
+
+### Phase 6b — Weekly Digest
+- [ ] `digest/builder.py` — query DB for past 7 days, build four sections: responded / unanswered / trending / numbers
+- [ ] `prompts/digest_summary.txt` — Claude prompt for the trending narrative section
+- [ ] `digest/sender.py` — SMTP send to `DIGEST_RECIPIENTS`; HTML email matching Lighthouse dark theme
+
+### Phase 7 — Scheduler + Hardening
+- [ ] `scheduler.py` — APScheduler setup, all jobs wired
+- [ ] Rotate default credentials before sharing dashboard access
+- [ ] Confirm compliance PII sign-off before enabling live mode
+- [ ] End-to-end test: trigger full pipeline manually, confirm mention flows from crawl → classify → reply/queue → Jira → dashboard
 
 ---
 
@@ -414,6 +524,11 @@ response_templates
 # Dashboard auth
 DASHBOARD_USERNAME=
 DASHBOARD_PASSWORD=
+SESSION_LIFETIME_DAYS=30
+SECRET_KEY=               # min 32 random bytes — generate with: python -c "import secrets; print(secrets.token_hex(32))"
+DASHBOARD_URL=            # public URL e.g. https://lighthouse.axi.com — used in Telegram alert links
+LOGIN_MAX_ATTEMPTS=5
+LOGIN_LOCKOUT_MINUTES=10
 
 # Jira (L3/L4 only)
 JIRA_BASE_URL=            # e.g. https://yourcompany.atlassian.net
@@ -421,9 +536,17 @@ JIRA_EMAIL=
 JIRA_API_TOKEN=
 JIRA_PROJECT_KEY=         # e.g. CX or LGL
 
-# Slack / Teams alert (set one, leave the other blank)
-SLACK_WEBHOOK_URL=
-TEAMS_WEBHOOK_URL=
+# Notifications (Telegram + email)
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=                  # community manager's chat ID
+NOTIFICATION_EMAIL=                # community manager's email
+ESCALATION_TELEGRAM_CHAT_ID=       # Julie's Telegram chat ID — receives SLA breach alerts
+ESCALATION_EMAIL=julie.sharova@axi.com
+DIGEST_RECIPIENTS=julie.sharova@axi.com  # comma-separated
+SLA_HOURS=24
+REMINDER_INTERVAL_HOURS=12
+WATCH_SPIKE_COUNT=3
+WATCH_SPIKE_MULTIPLIER=2
 
 # Database
 DATABASE_URL=postgresql://user:password@localhost:5432/lighthouse
@@ -434,18 +557,19 @@ ANTHROPIC_API_KEY=
 
 ---
 
-## Pre-Implementation Sign-Off
+## Verification
 
-Before Timur moves to implementation, the following must be resolved:
-
-- [ ] Auto-posting approval confirmed by stakeholders — brand risk decision, not a technical one
-- [ ] Response template text written and approved (at minimum one per category before Phase 4 starts)
-- [ ] Jira project key(s) and assignee rules confirmed with Jira admin
-- [ ] TrustPilot business account credentials confirmed as obtainable
-- [ ] Screenshot storage location agreed with Som (impacts enrichment output and DB path field)
-- [ ] `category` field name, allowed values, and which stage sets it confirmed with Som and Julie
-- [ ] Slack or Teams confirmed — which one does Axi use? Webhook URL obtainable?
-- [ ] Per-author auto-reply rate limit value agreed (proposed: 1 reply per author per platform per 7 days)
-- [ ] Which platforms support thread monitoring confirmed with Som (depends on crawler API access)
-- [ ] Scheduler job ordering and overlap prevention strategy agreed with Som and Julie
-- [ ] Dashboard hosting decision made: localhost only, or externally reachable?
+- Post a test L1 mention in English — confirm auto-reply is in English
+- Post a test mention in Arabic and one in Spanish — confirm responses are in the same language as the mention, not English
+- Post a test L1 mention to a sandbox Reddit account — confirm auto-reply is posted and DB updated
+- Create a test L3 mention — confirm Telegram message arrives within 30 seconds of classification, Jira ticket created, draft response in dashboard
+- Create a test L4 mention — confirm both Telegram and email fire; confirm Jira priority is Critical
+- Disable Telegram bot token temporarily — confirm email fallback fires for an L3 mention
+- Set `REMINDER_INTERVAL_HOURS=1` and `SLA_HOURS=2` in test env — create an L3 mention, confirm reminder fires at 1h and SLA breach alert fires at 2h
+- Mark a mention as `not_relevant` before the 12h reminder — confirm reminder job skips it
+- Confirm `resolution_reason` is required — dashboard must reject saving a resolution with an empty reason field
+- Post a test response via the dashboard — confirm Jira ticket receives a comment within 10 seconds containing the response text, platform, timestamp, and response URL
+- Set a mention to `not_relevant` — confirm Jira ticket status updates to `NOT_RELEVANT` automatically
+- Trigger Jira sync after manually moving a ticket in Jira — confirm `jira_status` in DB updates
+- Open dashboard — confirm all routes load, compliance queue shows L3/L4 only, ticket list is accurate
+- Trigger full pipeline via scheduler manually — confirm all jobs fire in correct order

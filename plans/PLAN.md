@@ -11,14 +11,13 @@ Lighthouse v1 is a brand intelligence and social response service for Axi. It co
 ```
 Scheduler (APScheduler)
     │
-    ▼
-[1] Crawler Layer          — platform-specific scrapers run in parallel
+    ├── Every 30 min ──► [1] Crawler Layer     — platform-specific scrapers run in parallel
+    │                         │
+    │                         ▼
+    │                    [2] Enrichment Layer  — screenshot, summary, store raw text + link
     │
-    ▼
-[2] Enrichment Layer       — screenshot, summary, store raw text + link
-    │
-    ▼
-[3] Classification Layer   — Claude: sentiment → risk tier (L1–L4)
+    └── Every 60 sec ──► [3] Classification Layer  — continuous poll; classifies each new mention immediately
+                              │                       Claude: translate → sentiment → risk tier (L1–L4)
     │
     ├── L1 / L2 ──────────► [4a] Response Agent  — template + Claude personalisation → auto-post
     │
@@ -37,7 +36,7 @@ Scheduler (APScheduler)
 
 ### 1. Crawler Layer
 
-One scraper module per platform. All scrapers share a common output schema.
+One scraper module per platform. All scrapers share a common output schema. The list below is the initial target set — the architecture is designed to be extended with additional platforms without changes to the core pipeline.
 
 | Platform | Library / Method |
 |---|---|
@@ -51,6 +50,7 @@ One scraper module per platform. All scrapers share a common output schema.
 | Google Play | `google-play-scraper` Python library |
 | Apple App Store | `app-store-scraper` Python library |
 | News / Web | Google Custom Search API or SerpAPI |
+| *(extensible)* | Any additional platform can be added by implementing the base crawler interface |
 
 Each scraper returns:
 ```python
@@ -74,32 +74,62 @@ Runs after crawl, before classification.
 
 ### 3. Classification Layer
 
-Two sequential Claude calls per mention:
+Three sequential Claude calls per mention:
 
-**Stage 1 — Sentiment**
-- Input: raw text + summary
+**Stage 1 — Language Detection & Translation**
+- Input: raw text
+- Output: `detected_language` (ISO 639-1 code) + `translated_text` (English)
+- If the mention is already in English, `translated_text` = `raw_text` and no API call is made (fast path)
+- Translation is stored alongside the original — the original is never overwritten
+- All downstream classification runs on `translated_text`; the original is shown in the dashboard with a "Translated from [language]" label and a "Show original" toggle
+
+**Stage 2 — Sentiment**
+- Input: translated text + summary
 - Output: `positive` | `negative` | `neutral`
-- Simple binary with neutral catch-all
+- Applied specifically to review-style content (TrustPilot, App Store, Google Play, ForexPeaceArmy) where positive/negative classification drives the response template and reporting
+- Non-review platforms (Reddit, X, news) also receive a sentiment label but it is used for filtering and reporting only, not response routing
 
-**Stage 2 — Risk Tier**
-- Input: raw text + summary + sentiment
-- Output: `L1` | `L2` | `L3` | `L4`
+**Platform Escalation Floor (deterministic — no Claude call, runs after Stage 2)**
+- Business rule: negative sentiment on high-visibility platforms enforces a minimum risk tier of L3
+- Broker review & complaint sites: TrustPilot, BrokersView, FastBull, ForexPeaceArmy, Forex Factory
+- App stores: Google Play, Apple App Store
+- Financial forums & communities: Reddit (r/Forex, r/Daytrading), Telegram groups, WhatsApp communities
+- Claude may still return L4 (preserved); floor only prevents under-classification on these platforms
+- Any floor override is annotated in `risk_reasoning` for auditability
+
+**Stage 3 — Risk Tier**
+- Input: translated text + summary + sentiment
+- Output: `L1` | `L2` | `L3` | `L4` (platform floor applied after this call)
 - Tier definitions: finalised during validation phase (see Open Questions)
 - Prompt includes: chain-of-thought enforcement, prompt-injection defence preamble, mention delimiters
 
-PII redaction (regex-based) runs on `raw_text` before either Claude call.
+PII redaction (regex-based) runs on `raw_text` before any Claude call.
 
-### 4a. Response Agent (L1 / L2)
+### 4a. Response Agent
+
+Handles both `PENDING_AUTO_RESPOND` (auto-posts) and `PENDING_HUMAN_POST` (drafts for human approval).
 
 - Selects the correct response template based on platform + sentiment + category
-- Claude personalises the opening 1–2 sentences to the specific mention
-- Posts reply via the platform's API / posting mechanism
-- Logs: response text, posted_at, post URL
+- Claude personalises the template and writes the full response in the **same language as the original mention** — `detected_language` from the classification layer is passed to the prompt. Templates are in English; Claude translates as part of personalisation. No exceptions.
+- All responses enforce Axi brand voice: **polite, corporate, solution-oriented** — consistent with Axi's website tone. No defensive language, no fault admissions, no legal commitments in any auto-generated text.
+- Auto-posts L1/L2 on standard platforms; queues draft for **Community Manager** approval on L4, forums, and client-identified mentions
 
-Template categories to define:
+Template categories:
 - Positive review → thank you + brand reinforcement
 - General complaint (L1) → acknowledgement + support link
 - Minor product complaint (L2) → acknowledgement + resolution path
+- L4 / client identified → empathetic acknowledgement + escalation to private support channel
+- Forum mention → community acknowledgement + invite to contact support privately
+
+### 4c. Immediate Notifications (L3 / L4)
+
+Fires the moment classification writes L3 or L4 to the DB — before the Community Manager next opens the dashboard.
+
+- **Telegram + email** to the Community Manager — fires immediately on L3/L4 classification
+- **12-hour reminders** repeat until the mention is resolved or dismissed
+- **24-hour SLA breach** triggers a final escalation alert if still unresolved
+- Reminders are suppressed the moment the Community Manager sets any manual resolution: `not_relevant`, `wont_respond`, `escalated`, or `responded`
+- All delivery attempts and resolution actions logged for audit
 
 ### 4b. Compliance Queue (L3 / L4)
 
@@ -122,12 +152,12 @@ Template categories to define:
 |---|---|
 | `/` | Overview — mention counts by tier, platform, status |
 | `/mentions` | Full filterable mention list |
-| `/mention/<id>` | Detail — screenshot, raw text, summary, classification, ticket |
+| `/mention/<id>` | Detail — screenshot, raw text (+ translated), summary, sentiment, classification, ticket |
 | `/compliance` | L3/L4 queue — approve response / escalate / dismiss |
 | `/tickets` | All Jira tickets and current status |
 | `/runs` | Crawler run history |
 
-HTTP basic auth on all routes. Credentials from `.env`.
+Flask-Login with persistent remember-me cookie (30 days). Login once, stay logged in across browser sessions. Credentials from `.env`.
 
 ---
 
@@ -136,6 +166,7 @@ HTTP basic auth on all routes. Credentials from `.env`.
 ```
 mentions
   id, platform, url, author, posted_at, raw_text, title,
+  detected_language, translated_text,
   summary, screenshot_path,
   sentiment, risk_level, classification_reasoning,
   response_text, response_posted_at, response_url,
@@ -172,8 +203,9 @@ response_templates
 
 ### Phase 3 — Classification Pipeline
 - [ ] PII redactor
-- [ ] Stage 1 sentiment prompt + Claude call
-- [ ] Stage 2 risk tier prompt + Claude call (tiers TBD — see Open Questions)
+- [ ] Stage 1 language detection + translation (Claude call; English fast-path skips call)
+- [ ] Stage 2 sentiment prompt + Claude call (positive / negative / neutral)
+- [ ] Stage 3 risk tier prompt + Claude call (tiers TBD — see Open Questions)
 - [ ] Enrichment: summary call + screenshot save
 
 ### Phase 4 — Response & Escalation
@@ -213,6 +245,8 @@ response_templates
 
 - Run crawler in isolation per platform, confirm output schema matches
 - Run classification pipeline against 30-day Brandwatch export, review every label manually
+- Test translation stage with non-English mentions (Arabic, Spanish, Portuguese, Thai — key Axi markets); confirm translated text is accurate before downstream classification runs on it
+- Test sentiment classification on a sample of TrustPilot and App Store reviews; verify positive/negative accuracy matches human labels
 - Test auto-reply end-to-end on a sandbox Reddit account before enabling on live accounts
 - Confirm L3/L4 Jira tickets appear with correct fields and `PENDING_HUMAN_REVIEW` status
 - Confirm Jira sync updates local DB correctly after manually moving a ticket in Jira

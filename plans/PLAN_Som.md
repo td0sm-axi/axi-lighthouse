@@ -66,15 +66,62 @@ Every scraper must return this exact structure:
 }
 ```
 
+### Parallel Execution Strategy
+
+All crawlers run simultaneously — one thread per crawler. A mention crawled from any platform is written to the DB immediately and picked up by the classification pipeline within 60 seconds, without waiting for other crawlers to finish.
+
+**Two crawler groups with different concurrency models:**
+
+**Group A — API-based crawlers (ThreadPoolExecutor)**
+Each runs in its own thread with independent rate limiting. One slow or rate-limited API does not block the others.
+
+| Crawler | Rate limit | Strategy |
+|---|---|---|
+| Reddit (`praw`) | 60 req/min | Built-in praw throttling |
+| X API v2 | 15 req/15min (search) | Token bucket, back off on 429 |
+| Meta Graph API | 200 calls/hour | Per-call delay, back off on 429 |
+| TikTok Research API | Varies | Back off on 429 |
+| LinkedIn API | Varies | Back off on 429 |
+| Google Play scraper | No limit (library) | No throttle needed |
+| App Store scraper | No limit (library) | No throttle needed |
+| Google Custom Search | 100/day free, 10k/day paid | Daily quota tracker |
+
+**Group B — Playwright scrapers (Browser pool, max 3 concurrent)**
+Headless browser instances are memory-heavy. Max 3 run at the same time; the rest queue. Each scraper adds a 1–2 second polite delay between page requests.
+
+| Crawler | Polite delay |
+|---|---|
+| TrustPilot | 1.5s between pages |
+| ForexPeaceArmy | 1.5s between pages |
+| BabyPips | 1.5s between pages |
+| Forex Factory | 1.5s between pages |
+| BrokersView | 1.5s between pages |
+| FastBull | 1.5s between pages |
+
+**Enrichment parallelism:**
+Screenshot and summary run concurrently per mention using `asyncio`. Screenshot (Playwright) and Claude summary call fire at the same time; both results are written before the mention is marked ready for classification.
+
+```python
+# crawler/runner.py — simplified
+with ThreadPoolExecutor(max_workers=len(API_CRAWLERS)) as pool:
+    api_futures = [pool.submit(crawler.run) for crawler in API_CRAWLERS]
+
+with BrowserPool(max_concurrent=3) as pool:
+    playwright_futures = [pool.submit(crawler.run) for crawler in PLAYWRIGHT_CRAWLERS]
+
+# Results written to DB as each future completes — no waiting for all
+```
+
 ### File Structure
 
 ```
 crawlers/
   __init__.py
   base.py               # BaseCrawler abstract class with common interface
+  runner.py             # parallel executor — ThreadPoolExecutor + BrowserPool
   reddit.py
   trustpilot.py
-  forex_forums.py       # ForexPeaceArmy + BabyPips
+  forex_forums.py       # ForexPeaceArmy + BabyPips + Forex Factory + BrokersView + FastBull
   x.py
   meta.py               # Facebook + Instagram
   tiktok.py
@@ -97,9 +144,15 @@ Runs immediately after each mention is crawled. Three jobs per mention:
    - Input: `raw_text`
    - Output: 2–3 sentence summary in English
    - Model: `claude-haiku-4-5-20251001` (fast, cheap — summary is low complexity)
+   - Runs concurrently with screenshot using `asyncio` — both fire at the same time, saving the sequential wait
 
 3. **Persist to PostgreSQL** — write the full record before classification begins
-   - If enrichment fails partway, the raw mention is still saved so it can be retried
+   - Raw mention is written immediately on crawl so classification can start as soon as enrichment completes
+   - If enrichment fails partway, the raw mention is still saved and retried on the next enrichment pass
+   - `pending_axi_reply` flag set here if the crawler detects an open thread where Axi has been tagged but not responded
+   - **No deduplication** — if the same URL is picked up by multiple crawlers (e.g. a tweet captured by both X API and Google Custom Search), each is stored and classified as a separate mention. URL is not a unique constraint. Each crawler source is an independent signal.
+
+**Design note:** counting the same content twice from different sources is intentional — it reflects the reach of that mention across discovery channels and increases its weight in the engagement and trending calculations.
 
 ---
 
@@ -130,37 +183,32 @@ crawler_runs
 
 ---
 
-## Planning Checklist
+## Build Checklist
 
-### Design Decisions to Confirm
-- [ ] Confirm which subreddits and search terms to monitor on Reddit (not just "Axi" — consider "Axi broker", "Axi trading", "axitrader")
-- [ ] Confirm exact TrustPilot page URL and whether Playwright can access it without login
-- [ ] Confirm ForexPeaceArmy and BabyPips URLs — are there multiple pages per broker? How deep to crawl?
-- [ ] Decide: Google Custom Search vs SerpAPI for web/news — what are the cost and rate limit implications?
-- [ ] Confirm PostgreSQL vs SQLite — is PostgreSQL available in the deployment environment?
-- [ ] Decide deduplication strategy: same mention crawled twice (e.g. daily runs) — deduplicate by URL? by URL + posted_at? by content hash?
-- [ ] Decide crawl window: how far back does each run look? Last 24 hours? Last 7 days on first run?
-- [ ] Confirm screenshot storage: local disk or cloud (S3/GCS)? What happens if disk fills up?
+### Phase 1 — Foundation
+- [ ] Create `crawlers/` directory with `base.py` abstract class
+- [ ] `crawlers/runner.py` — `ThreadPoolExecutor` for API crawlers + `BrowserPool` (max 3) for Playwright crawlers; writes results to DB as each future completes
+- [ ] Set up PostgreSQL connection (`db/connection.py`) and SQLAlchemy models (`db/schema.py`)
+- [ ] Install and configure Playwright (headless Chromium)
+- [ ] Create `.env.example` with all required credential keys
+- [ ] Create `requirements.txt`
 
-### Edge Cases to Resolve
-- [ ] **Mention with no text** — e.g. an image-only post or a TikTok video. What do we store? How does classification handle it?
-- [ ] **Deleted/removed post** — URL is valid at crawl time, screenshot taken, but post is deleted before next run. Do we re-crawl and update?
-- [ ] **Rate limits** — every API (Reddit, X, Meta, TikTok) has rate limits. What happens when we hit one mid-crawl? Fail the whole run or continue with remaining platforms?
-- [ ] **Platform blocks headless browser** — TrustPilot and forums may detect Playwright. What is the fallback?
-- [ ] **Non-English mentions** — raw_text in Arabic, Spanish, Thai. Does enrichment summarise in English? Does classification handle non-English input reliably?
-- [ ] **Very long posts** — a 10,000-word forum thread mentioning Axi once. Do we truncate before sending to Claude? What is the token limit?
-- [ ] **Author is Axi itself** — Axi's own social posts appear in brand mention searches. Do we filter these out before storing or before classifying?
-- [ ] **Duplicate mentions across platforms** — same complaint copy-pasted to Reddit and TrustPilot. Track as two separate mentions or deduplicate?
-- [ ] **App store reviews without URLs** — Google Play and App Store reviews don't have stable deep-link URLs. How do we form a unique URL for the `url` field?
-- [ ] **Crawler partial failure** — Reddit succeeds, X fails, Meta succeeds. Do we mark the run as failed or partial? How does retry work?
-- [ ] **Screenshot of login wall** — some platforms redirect to login. Screenshot captures login page, not the mention. How do we detect and flag this?
-- [ ] **Enrichment fails after crawl** — mention is stored with raw_text but screenshot or summary fails. Does classification still run on it? With what input?
+### Phase 2 — Crawlers (build + test each in isolation)
+- [ ] `crawlers/reddit.py` — `praw`, search for "Axi" in r/Forex and related subs
+- [ ] `crawlers/app_stores.py` — `google-play-scraper` + `app-store-scraper`
+- [ ] `crawlers/trustpilot.py` — Playwright scrape of Axi TrustPilot page
+- [ ] `crawlers/x.py` — X API v2 recent search
+- [ ] `crawlers/meta.py` — Meta Graph API page mentions + comments
+- [ ] `crawlers/tiktok.py` — TikTok Research API
+- [ ] `crawlers/linkedin.py` — LinkedIn brand mentions
+- [ ] `crawlers/web.py` — Google Custom Search or SerpAPI
+- [ ] `crawlers/forex_forums.py` — Playwright scrape of ForexPeaceArmy + BabyPips
 
-### Logic to Validate
-- [ ] Walk through the full data flow end-to-end on paper: crawl → enrich → what exactly lands in the DB before Julie's pipeline picks it up?
-- [ ] Confirm the common output schema handles all platforms without nullable hacks — title=None is fine, but are there other fields that vary?
-- [ ] Confirm `posted_at` timezone handling — all platforms return UTC? Or does each need conversion?
-- [ ] Confirm the crawler run record captures enough to diagnose failures: which platform failed, what error, how many mentions were saved before failure?
+### Phase 3 — Enrichment
+- [ ] `enrichment/screenshot.py` — Playwright full-page PNG capture
+- [ ] `enrichment/summarise.py` — Claude Haiku call, 2–3 sentence summary
+- [ ] `enrichment/pipeline.py` — orchestrates screenshot + summarise + persist for each mention
+- [ ] Retry logic: if screenshot fails, log and continue; don't block persist
 
 ---
 
@@ -201,13 +249,9 @@ ANTHROPIC_API_KEY=
 
 ---
 
-## Pre-Implementation Sign-Off
+## Verification
 
-Before Som moves to implementation, the following must be resolved:
-
-- [ ] All edge cases above have a documented answer (even if the answer is "out of scope for v1")
-- [ ] Deduplication strategy agreed with Timur (impacts the DB schema he owns)
-- [ ] Non-English handling agreed with Julie (impacts what her classification prompts must handle)
-- [ ] Screenshot storage location agreed with Timur (impacts the dashboard and DB path field)
-- [ ] Rate limit and retry strategy agreed — document what "a failed crawl run" looks like so the dashboard can surface it correctly
-- [ ] All required API credentials confirmed as obtainable (X, Meta, TikTok, LinkedIn all require app registration approval)
+- Run each crawler in isolation: `python -m crawlers.reddit` — confirm output matches the common schema
+- Run enrichment on a single hardcoded mention — confirm screenshot saved and summary generated
+- Check PostgreSQL: `SELECT platform, COUNT(*) FROM mentions GROUP BY platform;`
+- Confirm `crawler_runs` table updated after each run with correct mention count and any errors
