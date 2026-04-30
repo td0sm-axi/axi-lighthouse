@@ -1,0 +1,180 @@
+{
+  "_comment": "POST /rest/api/3/issue — creates Jira ticket for mention c3d4e5f6-0003 (L3, TrustPilot, platform floor applied)",
+  "_mention_id": "c3d4e5f6-0003-4003-8003-000000000003",
+  "fields": {
+    "project": {
+      "key": "CX"
+    },
+    "summary": "[L3] TrustPilot — Withdrawal delay complaint — disgruntled_trader_99",
+    "issuetype": {
+      "name": "Task"
+    },
+    "priority": {
+      "name": "High"
+    },
+    "assignee": {
+      "accountId": "COMMUNITY_MANAGER_ACCOUNT_ID"
+    },
+    "labels": ["lighthouse", "L3", "trustpilot", "withdrawal", "platform-floor"],
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Mention Details" }]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Platform: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "TrustPilot" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Author: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "disgruntled_trader_99" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Posted at: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "2026-04-29 14:30 UTC" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Engagement: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "7" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Mention URL: ", "marks": [{ "type": "strong" }] },
+            {
+              "type": "text",
+              "text": "https://www.trustpilot.com/reviews/6630f1c2a4b7c80012d3e4f5",
+              "marks": [{ "type": "link", "attrs": { "href": "https://www.trustpilot.com/reviews/6630f1c2a4b7c80012d3e4f5" } }]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Screenshot: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "data/screenshots/c3d4e5f6-0003.png" }
+          ]
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Summary" }]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "User reports an 8-day withdrawal delay on TrustPilot with dismissive support responses. Considering leaving Axi for a competitor." }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Mention Text (PII-redacted)" }]
+        },
+        {
+          "type": "blockquote",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                { "type": "text", "text": "I have been waiting 8 days for a withdrawal that should take 2. I contacted support three times and keep getting copy-paste responses telling me to wait. No one is actually looking into this. I am seriously considering moving to another broker." }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Classification" }]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Sentiment: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "negative" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Sentiment reasoning: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "Review expresses clear frustration: repeated support failures, 8-day delay, and explicit consideration of switching brokers." }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Risk tier: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "L3", "marks": [{ "type": "strong" }] }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Risk reasoning: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "Claude Stage 2 returned L2 (specific withdrawal complaint, no regulatory language, engagement < 10). [Platform floor applied: trustpilot negative → L3 minimum]" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Watch flags: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "withdrawal" }
+          ]
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Drafted Response (pending Community Manager approval)" }]
+        },
+        {
+          "type": "blockquote",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                { "type": "text", "text": "Thank you for reaching out and we're sorry to hear your experience hasn't met your expectations. An 8-day wait is not the standard we hold ourselves to, and we'd like to understand exactly what has happened with your withdrawal request. We'd ask that you contact our support team directly at https://support.axi.com with your account details so a senior member of our team can prioritise a resolution for you." }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Lighthouse mention link: ", "marks": [{ "type": "strong" }] },
+            {
+              "type": "text",
+              "text": "https://lighthouse.axi.com/mention/c3d4e5f6-0003-4003-8003-000000000003",
+              "marks": [{ "type": "link", "attrs": { "href": "https://lighthouse.axi.com/mention/c3d4e5f6-0003-4003-8003-000000000003" } }]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

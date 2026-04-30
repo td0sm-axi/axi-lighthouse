@@ -1,0 +1,36 @@
+{
+  "_comment": "POST /rest/api/3/issue/{issueIdOrKey}/transitions — updates ticket status after an action is taken in the Lighthouse dashboard. Call GET /rest/api/3/issue/{issueIdOrKey}/transitions first to resolve the correct transitionId for your Jira project workflow.",
+
+  "examples": {
+    "transition_to_responded": {
+      "_trigger": "Community Manager clicks Approve & Post or auto-agent posts a reply",
+      "_maps_to": "resolution_status = responded",
+      "transition": {
+        "id": "TRANSITION_ID_RESPONDED"
+      }
+    },
+    "transition_to_escalated": {
+      "_trigger": "Community Manager clicks Escalate in dashboard (/compliance)",
+      "_maps_to": "resolution_status = escalated",
+      "transition": {
+        "id": "TRANSITION_ID_ESCALATED"
+      }
+    },
+    "transition_to_not_relevant": {
+      "_trigger": "Community Manager marks mention as Not Relevant",
+      "_maps_to": "resolution_status = not_relevant",
+      "transition": {
+        "id": "TRANSITION_ID_NOT_RELEVANT"
+      }
+    },
+    "transition_to_wont_respond": {
+      "_trigger": "Community Manager marks mention as Won't Respond",
+      "_maps_to": "resolution_status = wont_respond",
+      "transition": {
+        "id": "TRANSITION_ID_WONT_RESPOND"
+      }
+    }
+  },
+
+  "_note": "Transition IDs are project-specific. Resolve them at startup by calling GET /rest/api/3/issue/{issueIdOrKey}/transitions and caching the name→id map. Store in jira/client.py as TRANSITION_MAP."
+}

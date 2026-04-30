@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% set active_page = "tickets" %}
+
+{% block title %}Tickets{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Jira Tickets</h1>
+    <p>Epic <a href="https://axitrader.atlassian.net/browse/{{ epic_key }}" target="_blank" style="color:var(--muted);text-decoration:none;">{{ epic_key }}</a> &mdash; L3 / L4 mentions requiring human review</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span style="font-size:11px;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;">
+      {{ tickets|length }} ticket{% if tickets|length != 1 %}s{% endif %}
+    </span>
+    <a href="{{ url_for('tickets') }}" class="btn btn-ghost" style="font-size:11px;padding:7px 14px;">Refresh</a>
+  </div>
+</div>
+
+{% if error %}
+<div class="status-bar" style="border-left-color:var(--l4);margin-bottom:24px;">
+  <div class="status-dot" style="background:var(--l4);"></div>
+  Jira error: {{ error }}
+</div>
+{% endif %}
+
+{% if tickets %}
+
+<!-- Summary strip -->
+<div style="display:flex;gap:0;border:1px solid var(--border);margin-bottom:32px;">
+  {% set l4_count = tickets | selectattr('tier', 'equalto', 'L4') | list | length %}
+  {% set l3_count = tickets | selectattr('tier', 'equalto', 'L3') | list | length %}
+  {% set done_count = tickets | selectattr('status', 'equalto', 'Done') | list | length %}
+  {% set inprog_count = tickets | selectattr('status', 'equalto', 'In Progress') | list | length %}
+  {% set esc_count = tickets | selectattr('status', 'equalto', 'Shareholder dependence') | list | length %}
+  {% set open_count = tickets | rejectattr('status', 'equalto', 'Done') | list | length %}
+
+  <div style="padding:20px 28px;border-right:1px solid var(--border);flex:1;">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Open</div>
+    <div style="font-size:28px;font-weight:300;color:var(--text);">{{ open_count }}</div>
+  </div>
+  <div style="padding:20px 28px;border-right:1px solid var(--border);flex:1;">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">L4 — Critical</div>
+    <div style="font-size:28px;font-weight:300;color:var(--l4);">{{ l4_count }}</div>
+  </div>
+  <div style="padding:20px 28px;border-right:1px solid var(--border);flex:1;">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">L3 — Serious</div>
+    <div style="font-size:28px;font-weight:300;color:var(--l3);">{{ l3_count }}</div>
+  </div>
+  <div style="padding:20px 28px;border-right:1px solid var(--border);flex:1;">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">In Progress</div>
+    <div style="font-size:28px;font-weight:300;color:var(--l2);">{{ inprog_count }}</div>
+  </div>
+  <div style="padding:20px 28px;border-right:1px solid var(--border);flex:1;">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Escalated</div>
+    <div style="font-size:28px;font-weight:300;color:var(--l4);">{{ esc_count }}</div>
+  </div>
+  <div style="padding:20px 28px;flex:1;">
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Resolved</div>
+    <div style="font-size:28px;font-weight:300;color:var(--positive);">{{ done_count }}</div>
+  </div>
+</div>
+
+<!-- Tickets table -->
+<div class="panel">
+  <div class="panel-header">
+    <h2>All tickets</h2>
+    <a href="https://axitrader.atlassian.net/jira/software/c/projects/APM/boards/3068" target="_blank">Open in Jira &rarr;</a>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:90px;">Ticket</th>
+        <th style="width:60px;">Tier</th>
+        <th style="width:130px;">Platform</th>
+        <th>Description</th>
+        <th style="width:180px;">Status</th>
+        <th style="width:100px;">Created</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tickets %}
+      <tr onclick="window.open('{{ t.jira_url }}', '_blank')" style="cursor:pointer;">
+        <td>
+          <a href="{{ t.jira_url }}" target="_blank"
+             style="font-size:12px;font-weight:600;color:var(--text);text-decoration:none;letter-spacing:0.02em;"
+             onclick="event.stopPropagation()">
+            {{ t.key }}
+          </a>
+        </td>
+        <td>
+          {% if t.tier %}
+          <span class="tier-badge tier-{{ t.tier | lower }}">{{ t.tier }}</span>
+          {% endif %}
+        </td>
+        <td><span class="platform-tag">{{ t.platform }}</span></td>
+        <td>
+          <div style="font-size:13px;color:var(--text);max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {{ t.description }}
+          </div>
+        </td>
+        <td>
+          <span class="status-badge status-{{ t.status | lower | replace(' ', '-') }}">
+            {{ t.status }}
+          </span>
+        </td>
+        <td><span class="time">{{ t.created_display }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<div class="panel" style="padding:48px 24px;text-align:center;">
+  <p style="color:var(--muted);font-size:13px;">No tickets found under epic {{ epic_key }}.</p>
+</div>
+{% endif %}
+{% endblock %}

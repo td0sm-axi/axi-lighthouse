@@ -1,0 +1,187 @@
+{
+  "_comment": "POST /rest/api/3/issue — creates Jira ticket for mention e5f6a7b8-0005 (L4, BrokersView, PII escalation, DFSA threat)",
+  "_mention_id": "e5f6a7b8-0005-4005-8005-000000000005",
+  "fields": {
+    "project": {
+      "key": "CX"
+    },
+    "summary": "[L4] BrokersView — Account freeze + DFSA threat — client info detected — KhaledM_UAE",
+    "issuetype": {
+      "name": "Task"
+    },
+    "priority": {
+      "name": "Critical"
+    },
+    "assignee": {
+      "accountId": "COMMUNITY_MANAGER_ACCOUNT_ID"
+    },
+    "labels": ["lighthouse", "L4", "brokersview", "client-identified", "DFSA", "withdrawal", "critical"],
+    "description": {
+      "type": "doc",
+      "version": 1,
+      "content": [
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Mention Details" }]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Platform: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "BrokersView" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Author: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "KhaledM_UAE" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Posted at: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "2026-04-30 06:10 UTC" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Engagement: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "47" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Mention URL: ", "marks": [{ "type": "strong" }] },
+            {
+              "type": "text",
+              "text": "https://brokersview.com/broker/axi/reviews/complaint-104872",
+              "marks": [{ "type": "link", "attrs": { "href": "https://brokersview.com/broker/axi/reviews/complaint-104872" } }]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Screenshot: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "data/screenshots/e5f6a7b8-0005.png" }
+          ]
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Summary" }]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "User reports account freeze without explanation, with $12,000 locked. Mentions DFSA regulatory complaint as next step. Account number and personal email visible in original post." }
+          ]
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Mention Text (PII-redacted — original contains ACCOUNT_NUMBER + EMAIL)" }]
+        },
+        {
+          "type": "blockquote",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                { "type": "text", "text": "My Axi account [ACCOUNT_NUMBER] was frozen on April 27 without any communication. I have emailed [EMAIL] and called support 6 times. No one can tell me why my $12,000 is locked. I am contacting the DFSA if this is not resolved by end of week. This is completely unacceptable from a regulated broker." }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Classification" }]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Sentiment: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "negative" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Sentiment reasoning: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "Post expresses serious distress about frozen funds, explicit regulatory escalation threat (DFSA), and multiple failed support attempts." }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Risk tier: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "L4 — CRITICAL", "marks": [{ "type": "strong" }] }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Risk reasoning: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "Claude Stage 2 returned L3 (regulatory language, withdrawal/account issue). [Platform floor applied: brokersview negative → L3 minimum]. [Client info escalation: PII detected → L4] — [ACCOUNT_NUMBER] and [EMAIL] found in redacted text." }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Client info present: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "YES — account number and email address redacted" }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Watch flags: ", "marks": [{ "type": "strong" }] },
+            { "type": "text", "text": "DFSA, withdrawal" }
+          ]
+        },
+        {
+          "type": "rule"
+        },
+        {
+          "type": "heading",
+          "attrs": { "level": 2 },
+          "content": [{ "type": "text", "text": "Drafted Response (pending Community Manager approval — do NOT auto-post)" }]
+        },
+        {
+          "type": "blockquote",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                { "type": "text", "text": "Thank you for sharing your concerns. We understand this situation is important to you, and we want to make sure it receives the attention it deserves. To protect your privacy and ensure this is handled properly, we'd like to continue this conversation through a private channel. Please contact our support team via https://support.axi.com and a senior member of our team will follow up with you directly." }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "content": [
+            { "type": "text", "text": "Lighthouse mention link: ", "marks": [{ "type": "strong" }] },
+            {
+              "type": "text",
+              "text": "https://lighthouse.axi.com/mention/e5f6a7b8-0005-4005-8005-000000000005",
+              "marks": [{ "type": "link", "attrs": { "href": "https://lighthouse.axi.com/mention/e5f6a7b8-0005-4005-8005-000000000005" } }]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

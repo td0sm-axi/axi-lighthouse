@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Lighthouse{% endblock %} — Axi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Axi &nbsp;/&nbsp; Lighthouse</div>
+  <div class="nav-divider"></div>
+  <div class="nav-links">
+    <a href="#" {% if active_page == 'overview' %}class="active"{% endif %}>Overview</a>
+    <a href="#" {% if active_page == 'mentions' %}class="active"{% endif %}>Mentions</a>
+    <a href="#" {% if active_page == 'compliance' %}class="active"{% endif %}>Compliance</a>
+    <a href="#" {% if active_page == 'watchlist' %}class="active"{% endif %}>Watch List</a>
+    <a href="{{ url_for('tickets') }}" {% if active_page == 'tickets' %}class="active"{% endif %}>Tickets</a>
+    <a href="#" {% if active_page == 'runs' %}class="active"{% endif %}>Runs</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-time">Jira — APM</span>
+    <div class="avatar">JS</div>
+  </div>
+</nav>
+
+<div class="page">
+  {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

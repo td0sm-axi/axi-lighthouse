@@ -1,0 +1,67 @@
+{
+  "_comment": "POST /rest/api/3/issue/{issueIdOrKey}/comment — fires immediately when Community Manager clicks Approve & Post for mention c3d4e5f6-0003",
+  "_mention_id": "c3d4e5f6-0003-4003-8003-000000000003",
+  "_jira_ticket": "CX-4891",
+  "body": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "heading",
+        "attrs": { "level": 3 },
+        "content": [{ "type": "text", "text": "Response Posted" }]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          { "type": "text", "text": "Posted by: ", "marks": [{ "type": "strong" }] },
+          { "type": "text", "text": "Community Manager" }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          { "type": "text", "text": "Platform: ", "marks": [{ "type": "strong" }] },
+          { "type": "text", "text": "TrustPilot" }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          { "type": "text", "text": "Posted at: ", "marks": [{ "type": "strong" }] },
+          { "type": "text", "text": "2026-04-30 14:32 UTC" }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          { "type": "text", "text": "Response URL: ", "marks": [{ "type": "strong" }] },
+          {
+            "type": "text",
+            "text": "https://www.trustpilot.com/reviews/6630f1c2a4b7c80012d3e4f5#owner-reply",
+            "marks": [{ "type": "link", "attrs": { "href": "https://www.trustpilot.com/reviews/6630f1c2a4b7c80012d3e4f5#owner-reply" } }]
+          }
+        ]
+      },
+      {
+        "type": "rule"
+      },
+      {
+        "type": "heading",
+        "attrs": { "level": 3 },
+        "content": [{ "type": "text", "text": "Response Text" }]
+      },
+      {
+        "type": "blockquote",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              { "type": "text", "text": "Thank you for reaching out and we're sorry to hear your experience hasn't met your expectations. An 8-day wait is not the standard we hold ourselves to, and we'd like to understand exactly what has happened with your withdrawal request. We'd ask that you contact our support team directly at https://support.axi.com with your account details so a senior member of our team can prioritise a resolution for you." }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
