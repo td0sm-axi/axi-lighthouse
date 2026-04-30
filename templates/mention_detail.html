@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}{{ mention.id }} — Mention Detail{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Mention Detail &mdash; {{ mention.id }}</h1>
+    <p>{{ mention.platform }} &mdash; {{ mention.posted_at[:10] if mention.posted_at else '' }}</p>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <span class="tier-badge tier-{{ mention.risk_level | lower }}">{{ mention.risk_level }}</span>
+    {% if jira_key %}
+    <a href="https://axitrader.atlassian.net/browse/{{ jira_key }}" target="_blank" class="btn btn-ghost">{{ jira_key }} ↗</a>
+    {% endif %}
+    <a href="{{ url_for('compliance') }}" class="btn btn-ghost">← Back</a>
+  </div>
+</div>
+
+<div class="page-info">
+  <strong>Mention Detail</strong> — Full classification card for a single flagged mention. Review the raw text, sentiment and risk reasoning, then use the <em>Respond</em> panel to mark the resolution. If a Jira ticket exists for this mention, the response will be posted as a comment and the ticket status updated automatically.
+</div>
+
+<div class="detail-grid">
+
+  <!-- Left: content -->
+  <div>
+    <div class="panel">
+      <div class="panel-header"><h2>Mention text</h2></div>
+      <div style="padding:24px;">
+        <div class="detail-quote">{{ mention.raw_text or mention.summary }}</div>
+        {% if mention.url %}
+        <div style="margin-top:12px;">
+          <a href="{{ mention.url }}" target="_blank" style="font-size:11px;color:var(--muted);text-decoration:none;letter-spacing:0.04em;">
+            View original ↗
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><h2>Classification</h2></div>
+      <div style="padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="detail-field">
+          <div class="detail-label">Sentiment</div>
+          <div class="detail-value">
+            <span class="sentiment-dot {{ mention.sentiment }}"></span>
+            {{ mention.sentiment | capitalize }}
+          </div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-label">Risk tier</div>
+          <div class="detail-value">
+            <span class="tier-badge tier-{{ mention.risk_level | lower }}">{{ mention.risk_level }}</span>
+          </div>
+        </div>
+        <div class="detail-field" style="grid-column:1/-1;">
+          <div class="detail-label">Sentiment reasoning</div>
+          <div class="detail-value">{{ mention.sentiment_reasoning or '—' }}</div>
+        </div>
+        <div class="detail-field" style="grid-column:1/-1;">
+          <div class="detail-label">Risk reasoning</div>
+          <div class="detail-value">{{ mention.risk_reasoning or '—' }}</div>
+        </div>
+        {% if mention.watch_flags %}
+        <div class="detail-field" style="grid-column:1/-1;">
+          <div class="detail-label">Watch flags</div>
+          <div class="detail-value">{{ mention.watch_flags }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% set act = action_record %}
+    {% if not (act and act.action) %}
+    <div class="panel">
+      <div class="panel-header"><h2>Respond</h2></div>
+      <div style="padding:24px;">
+        <textarea id="responseText" placeholder="Draft a response (optional)…"
+          style="width:100%;height:100px;padding:10px;border:1px solid var(--border);background:var(--bg);font-family:inherit;font-size:13px;resize:vertical;outline:none;margin-bottom:14px;"></textarea>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-primary" onclick="submitAction('responded')">Mark Responded</button>
+          <button class="btn btn-ghost" onclick="submitAction('escalated')">Escalate</button>
+          <button class="btn btn-ghost" onclick="submitAction('wont_respond')">Won't Respond</button>
+          <button class="btn btn-ghost" onclick="submitAction('not_relevant')">Not Relevant</button>
+        </div>
+        <div id="actionMsg" style="margin-top:12px;font-size:12px;"></div>
+      </div>
+    </div>
+    {% else %}
+    <div class="panel">
+      <div class="panel-header"><h2>Resolution</h2></div>
+      <div style="padding:24px;">
+        <span class="action-result {{ act.action }}">{{ act.action | replace('_', ' ') }}</span>
+        {% if act.response_text %}
+        <div class="detail-quote" style="margin-top:14px;">{{ act.response_text }}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right: metadata -->
+  <div>
+    <div class="panel">
+      <div class="panel-header"><h2>Details</h2></div>
+      <div style="padding:24px;">
+        <div class="detail-field">
+          <div class="detail-label">Author</div>
+          <div class="detail-value">{{ mention.author or '—' }}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-label">Platform</div>
+          <div class="detail-value">{{ mention.platform }}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-label">Posted</div>
+          <div class="detail-value">{{ mention.posted_at or '—' }}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-label">Engagement</div>
+          <div class="detail-value">{{ mention.engagement if mention.engagement else '—' }}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-label">Client info detected</div>
+          <div class="detail-value">{{ 'Yes' if mention.has_client_info else 'No' }}</div>
+        </div>
+        {% if jira_key %}
+        <div class="detail-field">
+          <div class="detail-label">Jira ticket</div>
+          <div class="detail-value">
+            <a href="https://axitrader.atlassian.net/browse/{{ jira_key }}" target="_blank"
+               style="color:var(--text);font-weight:600;">{{ jira_key }} ↗</a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function submitAction(action) {
+  const responseText = document.getElementById('responseText') ? document.getElementById('responseText').value : '';
+  const msg = document.getElementById('actionMsg');
+  msg.textContent = 'Saving…';
+  fetch('/api/compliance-action', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({id: '{{ mention.id }}', action, response_text: responseText})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) { location.reload(); }
+    else { msg.textContent = 'Error: ' + (data.error || 'unknown'); }
+  })
+  .catch(err => { msg.textContent = 'Error: ' + err.message; });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Platform Coverage{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Platform Coverage</h1>
+    <p>{{ platform_counts|length }} platforms &mdash; {{ period }}</p>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-dot"></div>
+  Brandwatch export &mdash; {{ total | default(0) }} total mentions across all platforms
+</div>
+
+<div class="page-info">
+  <strong>Platform Coverage</strong> — Breakdown of mention volume by platform from the Brandwatch CSV export for {{ period }}. Share bars show each platform's proportion of total mentions. All platforms show <em>OK</em> — this export contained no crawler errors.
+</div>
+
+<div class="panel">
+  <div class="panel-header">
+    <h2>Mentions by platform</h2>
+    <span style="font-size:11px;color:var(--muted);">{{ total | default(0) }} total</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Platform</th>
+        <th>Mentions</th>
+        <th>Share</th>
+        <th>Status</th>
+        <th>Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for platform, count in platform_counts %}
+      {% set pct = (count / total * 100) | round(1) if total else 0 %}
+      <tr>
+        <td>
+          <span style="font-size:13px;font-weight:500;">{{ platform }}</span>
+        </td>
+        <td>
+          <span style="font-size:20px;font-weight:300;">{{ count }}</span>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:80px;height:4px;background:var(--border);border-radius:2px;">
+              <div style="width:{{ [pct, 100] | min }}%;height:4px;background:var(--text);border-radius:2px;"></div>
+            </div>
+            <span class="time">{{ pct }}%</span>
+          </div>
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="run-status"></div>
+            <span style="font-size:11px;color:var(--positive);letter-spacing:0.04em;text-transform:uppercase;">OK</span>
+          </div>
+        </td>
+        <td class="time">Brandwatch export</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5" style="padding:32px 24px;color:var(--muted);text-align:center;">No platform data available.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

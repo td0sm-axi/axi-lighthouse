@@ -15,16 +15,16 @@
   <div class="nav-brand">Axi &nbsp;/&nbsp; Lighthouse</div>
   <div class="nav-divider"></div>
   <div class="nav-links">
-    <a href="#" {% if active_page == 'overview' %}class="active"{% endif %}>Overview</a>
-    <a href="#" {% if active_page == 'mentions' %}class="active"{% endif %}>Mentions</a>
-    <a href="#" {% if active_page == 'compliance' %}class="active"{% endif %}>Compliance</a>
-    <a href="#" {% if active_page == 'watchlist' %}class="active"{% endif %}>Watch List</a>
+    <a href="{{ url_for('index') }}" {% if active_page == 'overview' %}class="active"{% endif %}>Overview</a>
+    <a href="{{ url_for('mentions') }}" {% if active_page == 'mentions' %}class="active"{% endif %}>Mentions</a>
+    <a href="{{ url_for('compliance') }}" {% if active_page == 'compliance' %}class="active"{% endif %}>Compliance{% if compliance_badge_count %} <span class="badge-alert">{{ compliance_badge_count }}</span>{% endif %}</a>
+    <a href="{{ url_for('watchlist') }}" {% if active_page == 'watchlist' %}class="active"{% endif %}>Watch List</a>
     <a href="{{ url_for('tickets') }}" {% if active_page == 'tickets' %}class="active"{% endif %}>Tickets</a>
-    <a href="#" {% if active_page == 'runs' %}class="active"{% endif %}>Runs</a>
+    <a href="{{ url_for('runs') }}" {% if active_page == 'runs' %}class="active"{% endif %}>Runs</a>
   </div>
   <div class="nav-right">
     <span class="nav-time">Jira — APM</span>
-    <div class="avatar">JS</div>
+    <div class="avatar">TD</div>
   </div>
 </nav>
 

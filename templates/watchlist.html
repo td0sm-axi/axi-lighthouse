@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Watch List{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Watch List</h1>
+    <p>{{ watch_terms|length }} monitored terms &mdash; {{ period }}</p>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-dot"></div>
+  Julie classification layer &mdash; terms triggering tier escalation
+</div>
+
+<div class="page-info">
+  <strong>Watch List</strong> — Compliance terms monitored across every mention in the Brandwatch export. Any mention containing a watch term is escalated to the corresponding tier. Terms appearing <em>5 or more times</em> in the period are flagged as spikes and highlighted in red.
+</div>
+
+{% set active_terms = watch_terms | selectattr('count', 'greaterthan', 0) | list %}
+{% set quiet_terms  = watch_terms | rejectattr('count', 'greaterthan', 0) | list %}
+
+{% if active_terms %}
+<div class="panel" style="margin-bottom:24px;">
+  <div class="panel-header">
+    <h2>Active terms</h2>
+    <span style="font-size:11px;color:var(--muted);">{{ active_terms|length }} of {{ watch_terms|length }} terms triggered</span>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Term</th>
+        <th>Tier</th>
+        <th>Mentions this period</th>
+        <th>Signal</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for w in active_terms %}
+      <tr class="{% if w.count >= 5 %}spike{% endif %}">
+        <td>
+          <span style="font-size:13px;font-weight:500;{% if w.count >= 5 %}color:var(--l4);{% endif %}">
+            {{ w.term }}
+          </span>
+        </td>
+        <td><span class="tier-badge tier-{{ w.tier | lower }}">{{ w.tier }}</span></td>
+        <td>
+          <span style="font-size:20px;font-weight:300;color:var(--text);">{{ w.count }}</span>
+        </td>
+        <td>
+          {% if w.count >= 5 %}
+          <span style="font-size:11px;font-weight:600;color:var(--l4);letter-spacing:0.04em;text-transform:uppercase;">Spike</span>
+          {% elif w.count >= 3 %}
+          <span style="font-size:11px;color:var(--l3);letter-spacing:0.04em;text-transform:uppercase;">Elevated</span>
+          {% else %}
+          <span style="font-size:11px;color:var(--muted);letter-spacing:0.04em;text-transform:uppercase;">Low</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% if quiet_terms %}
+<div class="panel">
+  <div class="panel-header">
+    <h2>Quiet terms</h2>
+    <span style="font-size:11px;color:var(--muted);">{{ quiet_terms|length }} terms — no mentions this period</span>
+  </div>
+  <div class="watch-quiet">
+    {{ quiet_terms | map(attribute='term') | join(', ') }}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

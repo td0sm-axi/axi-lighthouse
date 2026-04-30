@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Compliance{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Compliance Queue</h1>
+    <p>{{ items|length }} mention{% if items|length != 1 %}s{% endif %} requiring review &mdash; {{ period }}</p>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-dot" style="background:var(--l3);"></div>
+  L2 / L3 / L4 mentions — review and respond or escalate
+</div>
+
+<div class="page-info">
+  <strong>Compliance Queue</strong> — High-priority mentions flagged by the classification engine for human review. <em>Review</em> opens the full detail and response tools. <em>Escalate</em> transitions the Jira ticket to "Shareholder dependence". <em>Dismiss</em> marks it not relevant and closes the ticket.
+</div>
+
+{% if items %}
+<div class="panel">
+  {% for item in items %}
+  {% set act = item.action %}
+  <div class="compliance-item">
+    <div style="padding-top:2px;">
+      <span class="tier-badge tier-{{ item.risk_level | lower }}">{{ item.risk_level }}</span>
+    </div>
+    <div class="compliance-body">
+      <div class="compliance-title">
+        <a href="{{ url_for('mention_detail', mention_id=item.id) }}"
+           style="color:var(--text);text-decoration:none;"
+           onclick="event.stopPropagation()">
+          {{ item.summary }}
+        </a>
+      </div>
+      <div class="compliance-meta">
+        {{ item.platform }} &middot;
+        {% if item.engagement %}{{ item.engagement }} eng &middot; {% endif %}
+        {{ item.posted_at[:10] if item.posted_at else '—' }}
+        {% if item.jira_key %} &middot; <a href="https://axitrader.atlassian.net/browse/{{ item.jira_key }}" target="_blank" style="color:var(--muted);">{{ item.jira_key }}</a>{% endif %}
+      </div>
+      <div class="compliance-actions">
+        {% if act and act.action %}
+          <span class="action-result {{ act.action }}">
+            {{ act.action | replace('_', ' ') }}
+          </span>
+          <a href="{{ url_for('mention_detail', mention_id=item.id) }}" class="btn btn-ghost">View detail</a>
+        {% else %}
+          <a href="{{ url_for('mention_detail', mention_id=item.id) }}" class="btn btn-primary">Review</a>
+          <button class="btn btn-ghost" onclick="doAction('{{ item.id }}', 'escalated', this)">Escalate</button>
+          <button class="btn btn-ghost" onclick="doAction('{{ item.id }}', 'not_relevant', this)">Dismiss</button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="panel" style="padding:48px 24px;text-align:center;">
+  <p style="color:var(--muted);font-size:13px;">No compliance items found.</p>
+</div>
+{% endif %}
+
+<script>
+function doAction(id, action, btn) {
+  const row = btn.closest('.compliance-actions');
+  row.querySelectorAll('button').forEach(b => b.disabled = true);
+  fetch('/api/compliance-action', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({id, action})
+  })
+  .then(r => r.json())
+  .then(() => { location.reload(); })
+  .catch(err => {
+    row.querySelectorAll('button').forEach(b => b.disabled = false);
+    alert('Error: ' + err.message);
+  });
+}
+</script>
+{% endblock %}

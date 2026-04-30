@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Mentions{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>All Mentions</h1>
+    <p>{{ total }} mentions &mdash; {{ period }}</p>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-dot"></div>
+  Brandwatch export &mdash; {{ period }} &mdash; showing {{ mentions|length }} of {{ total }}
+</div>
+
+<div class="page-info">
+  <strong>Mentions</strong> — Filterable log of the {{ total }} most recent social mentions from the Brandwatch export. Filter by platform, tier, or sentiment using the dropdowns below. Click any row to open the original source URL in a new tab.
+</div>
+
+<form method="get" action="{{ url_for('mentions') }}" class="filter-bar">
+  <select name="platform" class="filter-select" onchange="this.form.submit()">
+    <option value="">All platforms</option>
+    {% for p in platforms %}
+    <option value="{{ p }}" {% if p == platform_filter %}selected{% endif %}>{{ p }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="tier" class="filter-select" onchange="this.form.submit()">
+    <option value="">All tiers</option>
+    {% for t in tiers %}
+    <option value="{{ t }}" {% if t == tier_filter %}selected{% endif %}>{{ t }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="sentiment" class="filter-select" onchange="this.form.submit()">
+    <option value="">All sentiments</option>
+    {% for s in sentiments %}
+    <option value="{{ s }}" {% if s == sentiment_filter %}selected{% endif %}>{{ s | capitalize }}</option>
+    {% endfor %}
+  </select>
+
+  {% if platform_filter or tier_filter or sentiment_filter %}
+  <a href="{{ url_for('mentions') }}" class="btn btn-ghost">Clear filters</a>
+  {% endif %}
+
+  <span class="filter-count">{{ mentions|length }} result{% if mentions|length != 1 %}s{% endif %}</span>
+</form>
+
+<div class="panel">
+  <table>
+    <thead>
+      <tr>
+        <th>Mention</th>
+        <th>Platform</th>
+        <th>Tier</th>
+        <th>Eng</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in mentions %}
+      <tr style="cursor:pointer;" onclick="{% if m.url %}window.open('{{ m.url | e }}','_blank'){% endif %}">
+        <td>
+          <div class="mention-text">
+            <span class="sentiment-dot {{ m.sentiment }}"></span>
+            {{ m.text | truncate(100) }}
+          </div>
+          {% if m.author %}
+          <div class="mention-meta">@{{ m.author }}</div>
+          {% endif %}
+        </td>
+        <td><span class="platform-tag">{{ m.platform }}</span></td>
+        <td><span class="tier-badge tier-{{ m.tier | lower }}">{{ m.tier }}</span></td>
+        <td class="eng">{{ m.engagement if m.engagement else '—' }}</td>
+        <td class="time">{{ m.date[:10] if m.date else '—' }}</td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="5" style="padding:32px 24px;color:var(--muted);text-align:center;">No mentions match the current filters.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

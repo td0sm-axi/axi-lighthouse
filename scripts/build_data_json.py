@@ -237,8 +237,15 @@ def main():
     negative = sum(1 for m in mentions if m["sentiment"] == "negative")
     neutral  = total - positive - negative
 
+    tier_counts = {
+        "L4": sum(1 for m in mentions if m["tier"] == "L4"),
+        "L3": sum(1 for m in mentions if m["tier"] == "L3"),
+        "L2": sum(1 for m in mentions if m["tier"] == "L2"),
+        "L1": sum(1 for m in mentions if m["tier"] == "L1"),
+    }
+
     sorted_all     = sorted(mentions, key=lambda m: m["date"], reverse=True)
-    recent_mentions = [_mention_without_flag(m) for m in sorted_all[:25]]
+    recent_mentions = [_mention_without_flag(m) for m in sorted_all[:100]]
     compliance_queue = build_compliance_queue(mentions)
 
     platform_counts = [
@@ -285,6 +292,7 @@ def main():
         "positive":         positive,
         "negative":         negative,
         "neutral":          neutral,
+        "tier_counts":      tier_counts,
         "recent_mentions":  recent_mentions,
         "compliance_queue": compliance_queue,
         "platform_counts":  platform_counts,

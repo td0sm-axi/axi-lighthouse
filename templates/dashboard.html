@@ -221,6 +221,52 @@
       .page { padding: 28px 20px; }
       nav  { padding: 0 20px; }
     }
+
+    /* ── PIPELINE ───────────────────────────────────────────────────────────── */
+    .pipeline-strip {
+      background: #0c0c0a;
+      border-bottom: 1px solid #1a1a17;
+      overflow: hidden;
+      height: 128px;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+    .pipeline-strip::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.012) 2px,
+        rgba(255,255,255,0.012) 4px
+      );
+      pointer-events: none;
+    }
+    .pipeline-svg {
+      width: 100%;
+      max-width: 1280px;
+      height: 128px;
+      margin: 0 auto;
+      display: block;
+    }
+
+    /* ── PAGE INFO BOX ──────────────────────────────────────────────────────── */
+    .page-info {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--subtle);
+      padding: 13px 18px;
+      margin-bottom: 28px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.6;
+      letter-spacing: 0.01em;
+    }
+    .page-info strong { color: var(--text); font-weight: 600; }
+    .page-info em { color: var(--text); font-style: normal; font-weight: 500; }
   </style>
 </head>
 <body>
@@ -229,19 +275,158 @@
   <div class="nav-brand">Axi &nbsp;/&nbsp; Lighthouse</div>
   <div class="nav-divider"></div>
   <div class="nav-links">
-    <a href="#" class="active" onclick="showTab('main',this)">Overview</a>
+    <a href="{{ url_for('index') }}" class="active" onclick="showTab('main',this)">Overview</a>
     <a href="#" onclick="showTab('select',this)">Axi Select <span class="nav-select-badge">S</span></a>
-    <a href="#">Mentions</a>
-    <a href="#">Compliance <span class="badge-alert" id="navBadge">0</span></a>
-    <a href="#">Watch List</a>
+    <a href="{{ url_for('mentions') }}">Mentions</a>
+    <a href="{{ url_for('compliance') }}">Compliance <span class="badge-alert" id="navBadge">{{ compliance_badge_count }}</span></a>
+    <a href="{{ url_for('watchlist') }}">Watch List</a>
     <a href="{{ url_for('tickets') }}">Tickets</a>
-    <a href="#">Runs</a>
+    <a href="{{ url_for('runs') }}">Runs</a>
   </div>
   <div class="nav-right">
     <span class="nav-time">Brandwatch export — {{ data.period }}</span>
     <div class="avatar">JS</div>
   </div>
 </nav>
+
+<!-- ── PIPELINE ANIMATION ──────────────────────────────────────────────────── -->
+<div class="pipeline-strip">
+  <svg class="pipeline-svg" viewBox="0 0 1280 128" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Dot grid background -->
+      <pattern id="pgrid" width="20" height="20" patternUnits="userSpaceOnUse">
+        <circle cx="0.5" cy="0.5" r="0.6" fill="#ffffff" opacity="0.055"/>
+      </pattern>
+
+      <!-- Glow filter for particles -->
+      <filter id="pglow" x="-200%" y="-200%" width="500%" height="500%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2.8" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+
+      <!-- Glow filter for node borders -->
+      <filter id="nglow" x="-80%" y="-80%" width="260%" height="260%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+
+      <!-- Particle motion paths (node edges: cx ± 34) -->
+      <path id="ps1" d="M 149,62 L 337,62"/>
+      <path id="ps2" d="M 411,62 L 599,62"/>
+      <path id="ps3" d="M 673,62 L 861,62"/>
+      <path id="ps4" d="M 935,62 L 1107,62"/>
+    </defs>
+
+    <!-- Background -->
+    <rect width="1280" height="128" fill="#0c0c0a"/>
+    <rect width="1280" height="128" fill="url(#pgrid)"/>
+
+    <!-- Rail lines (dark base) -->
+    <line x1="149" y1="62" x2="337" y2="62" stroke="#1e1e1b" stroke-width="2"/>
+    <line x1="411" y1="62" x2="599" y2="62" stroke="#1e1e1b" stroke-width="2"/>
+    <line x1="673" y1="62" x2="861" y2="62" stroke="#1e1e1b" stroke-width="2"/>
+    <line x1="935" y1="62" x2="1107" y2="62" stroke="#1e1e1b" stroke-width="2"/>
+
+    <!-- Animated dashed data-flow overlays -->
+    <line x1="149" y1="62" x2="337" y2="62" stroke="#38382f" stroke-width="1" stroke-dasharray="4 13">
+      <animate attributeName="stroke-dashoffset" from="0" to="-34" dur="1.0s" repeatCount="indefinite"/>
+    </line>
+    <line x1="411" y1="62" x2="599" y2="62" stroke="#38382f" stroke-width="1" stroke-dasharray="4 13">
+      <animate attributeName="stroke-dashoffset" from="0" to="-34" dur="0.85s" repeatCount="indefinite"/>
+    </line>
+    <line x1="673" y1="62" x2="861" y2="62" stroke="#38382f" stroke-width="1" stroke-dasharray="4 13">
+      <animate attributeName="stroke-dashoffset" from="0" to="-34" dur="0.72s" repeatCount="indefinite"/>
+    </line>
+    <line x1="935" y1="62" x2="1107" y2="62" stroke="#38382f" stroke-width="1" stroke-dasharray="4 13">
+      <animate attributeName="stroke-dashoffset" from="0" to="-34" dur="0.62s" repeatCount="indefinite"/>
+    </line>
+
+    <!-- ── NODE 1: BRANDWATCH (SOURCE) cx=115 ────────────────────────────── -->
+    <!-- Outer pulse ring -->
+    <circle cx="115" cy="62" r="34" fill="none" stroke="#444440" stroke-width="0.8" opacity="0">
+      <animate attributeName="r"       values="34;50;50"   dur="3.2s" begin="0s"    repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.35;0;0"   dur="3.2s" begin="0s"    repeatCount="indefinite"/>
+    </circle>
+    <!-- Node border glow -->
+    <circle cx="115" cy="62" r="32" fill="none" stroke="#333330" stroke-width="1" filter="url(#nglow)" opacity="0.5"/>
+    <!-- Node body -->
+    <circle cx="115" cy="62" r="32" fill="#111110" stroke="#2e2e2b" stroke-width="1.5"/>
+    <!-- Labels -->
+    <text x="115" y="57" text-anchor="middle" font-size="7.5" fill="#4a4a47" letter-spacing="0.13em" font-family="Inter,sans-serif" font-weight="600">BRAND</text>
+    <text x="115" y="69" text-anchor="middle" font-size="7.5" fill="#4a4a47" letter-spacing="0.13em" font-family="Inter,sans-serif" font-weight="600">WATCH</text>
+    <text x="115" y="108" text-anchor="middle" font-size="7" fill="#2d2d2a" letter-spacing="0.11em" font-family="Inter,sans-serif">CSV SOURCE</text>
+
+    <!-- ── NODE 2: MENTIONS (green) cx=373 ───────────────────────────────── -->
+    <circle cx="373" cy="62" r="38" fill="none" stroke="#2a7a4b" stroke-width="0.8" opacity="0">
+      <animate attributeName="r"       values="34;52;52"   dur="2.9s" begin="-0.9s"  repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0;0"    dur="2.9s" begin="-0.9s"  repeatCount="indefinite"/>
+    </circle>
+    <circle cx="373" cy="62" r="32" fill="none" stroke="#2a7a4b" stroke-width="1.2" filter="url(#nglow)" opacity="0.6"/>
+    <circle cx="373" cy="62" r="32" fill="#0b1710" stroke="#2a7a4b" stroke-width="1.5"/>
+    <text x="373" y="58" text-anchor="middle" font-size="16" fill="#2a7a4b" font-weight="300" font-family="Inter,sans-serif" letter-spacing="-0.02em">1,778</text>
+    <text x="373" y="71" text-anchor="middle" font-size="6.5" fill="#1c5232" letter-spacing="0.13em" font-family="Inter,sans-serif" font-weight="600">MENTIONS</text>
+    <text x="373" y="108" text-anchor="middle" font-size="7" fill="#2a7a4b" opacity="0.55" letter-spacing="0.11em" font-family="Inter,sans-serif">INGESTED</text>
+
+    <!-- ── NODE 3: CLASSIFY ENGINE (amber) cx=635 ────────────────────────── -->
+    <circle cx="635" cy="62" r="38" fill="none" stroke="#a06b00" stroke-width="0.8" opacity="0">
+      <animate attributeName="r"       values="34;52;52"   dur="2.7s" begin="-1.6s"  repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0;0"    dur="2.7s" begin="-1.6s"  repeatCount="indefinite"/>
+    </circle>
+    <circle cx="635" cy="62" r="32" fill="none" stroke="#a06b00" stroke-width="1.2" filter="url(#nglow)" opacity="0.6"/>
+    <circle cx="635" cy="62" r="32" fill="#130d00" stroke="#a06b00" stroke-width="1.5"/>
+    <text x="635" y="58" text-anchor="middle" font-size="8.5" fill="#a06b00" letter-spacing="0.1em" font-family="Inter,sans-serif" font-weight="600">CLASSIFY</text>
+    <text x="635" y="70" text-anchor="middle" font-size="6.5" fill="#6b4700" letter-spacing="0.11em" font-family="Inter,sans-serif">ENGINE</text>
+    <text x="635" y="108" text-anchor="middle" font-size="7" fill="#a06b00" opacity="0.55" letter-spacing="0.11em" font-family="Inter,sans-serif">NLP + RULES</text>
+
+    <!-- ── NODE 4: RISK TIERS (orange) cx=897 ────────────────────────────── -->
+    <circle cx="897" cy="62" r="38" fill="none" stroke="#c45000" stroke-width="0.8" opacity="0">
+      <animate attributeName="r"       values="34;52;52"   dur="3.0s" begin="-2.2s"  repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0;0"    dur="3.0s" begin="-2.2s"  repeatCount="indefinite"/>
+    </circle>
+    <circle cx="897" cy="62" r="32" fill="none" stroke="#c45000" stroke-width="1.2" filter="url(#nglow)" opacity="0.6"/>
+    <circle cx="897" cy="62" r="32" fill="#130700" stroke="#c45000" stroke-width="1.5"/>
+    <text x="897" y="57" text-anchor="middle" font-size="13" fill="#c45000" font-weight="600" font-family="Inter,sans-serif" letter-spacing="0.04em">L1–L4</text>
+    <text x="897" y="70" text-anchor="middle" font-size="6" fill="#7a3200" letter-spacing="0.12em" font-family="Inter,sans-serif" font-weight="500">RISK TIERS</text>
+    <text x="897" y="108" text-anchor="middle" font-size="7" fill="#c45000" opacity="0.55" letter-spacing="0.11em" font-family="Inter,sans-serif">SCORED</text>
+
+    <!-- ── NODE 5: JIRA APM (bright terminal) cx=1141 ────────────────────── -->
+    <circle cx="1141" cy="62" r="38" fill="none" stroke="#d0d0cc" stroke-width="0.8" opacity="0">
+      <animate attributeName="r"       values="34;52;52"   dur="2.5s" begin="-0.5s"  repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.18;0;0"   dur="2.5s" begin="-0.5s"  repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1141" cy="62" r="32" fill="none" stroke="#d0d0cc" stroke-width="1.2" filter="url(#nglow)" opacity="0.4"/>
+    <circle cx="1141" cy="62" r="32" fill="#18181a" stroke="#c8c8c4" stroke-width="1.5"/>
+    <text x="1141" y="58" text-anchor="middle" font-size="11" fill="#e8e8e4" font-weight="600" font-family="Inter,sans-serif" letter-spacing="0.08em">JIRA</text>
+    <text x="1141" y="71" text-anchor="middle" font-size="6.5" fill="#666662" letter-spacing="0.12em" font-family="Inter,sans-serif">APM</text>
+    <text x="1141" y="108" text-anchor="middle" font-size="7" fill="#555552" letter-spacing="0.11em" font-family="Inter,sans-serif">TICKETED</text>
+
+    <!-- ── PARTICLES SEG 1: raw gray stream ──────────────────────────────── -->
+    <circle r="2.5" fill="#777774" filter="url(#pglow)"><animateMotion dur="2.3s" repeatCount="indefinite" begin="0s"    ><mpath href="#ps1"/></animateMotion></circle>
+    <circle r="2"   fill="#555552" filter="url(#pglow)"><animateMotion dur="2.3s" repeatCount="indefinite" begin="-0.57s"><mpath href="#ps1"/></animateMotion></circle>
+    <circle r="2.5" fill="#999994" filter="url(#pglow)"><animateMotion dur="2.3s" repeatCount="indefinite" begin="-1.15s"><mpath href="#ps1"/></animateMotion></circle>
+    <circle r="2"   fill="#555552" filter="url(#pglow)"><animateMotion dur="2.3s" repeatCount="indefinite" begin="-1.73s"><mpath href="#ps1"/></animateMotion></circle>
+    <circle r="2.5" fill="#777774" filter="url(#pglow)"><animateMotion dur="2.3s" repeatCount="indefinite" begin="-0.35s"><mpath href="#ps1"/></animateMotion></circle>
+
+    <!-- ── PARTICLES SEG 2: green + amber emerging ───────────────────────── -->
+    <circle r="3"   fill="#2a7a4b" filter="url(#pglow)"><animateMotion dur="2.0s" repeatCount="indefinite" begin="0s"    ><mpath href="#ps2"/></animateMotion></circle>
+    <circle r="2.5" fill="#777774" filter="url(#pglow)"><animateMotion dur="2.0s" repeatCount="indefinite" begin="-0.5s" ><mpath href="#ps2"/></animateMotion></circle>
+    <circle r="3"   fill="#a06b00" filter="url(#pglow)"><animateMotion dur="2.0s" repeatCount="indefinite" begin="-1.0s" ><mpath href="#ps2"/></animateMotion></circle>
+    <circle r="2.5" fill="#2a7a4b" filter="url(#pglow)"><animateMotion dur="2.0s" repeatCount="indefinite" begin="-1.5s" ><mpath href="#ps2"/></animateMotion></circle>
+    <circle r="2"   fill="#777774" filter="url(#pglow)"><animateMotion dur="2.0s" repeatCount="indefinite" begin="-1.8s" ><mpath href="#ps2"/></animateMotion></circle>
+
+    <!-- ── PARTICLES SEG 3: tiered mix ──────────────────────────────────── -->
+    <circle r="3"   fill="#2a7a4b" filter="url(#pglow)"><animateMotion dur="1.85s" repeatCount="indefinite" begin="0s"     ><mpath href="#ps3"/></animateMotion></circle>
+    <circle r="2.5" fill="#777774" filter="url(#pglow)"><animateMotion dur="1.85s" repeatCount="indefinite" begin="-0.46s" ><mpath href="#ps3"/></animateMotion></circle>
+    <circle r="3.5" fill="#c45000" filter="url(#pglow)"><animateMotion dur="1.85s" repeatCount="indefinite" begin="-0.92s" ><mpath href="#ps3"/></animateMotion></circle>
+    <circle r="3"   fill="#a06b00" filter="url(#pglow)"><animateMotion dur="1.85s" repeatCount="indefinite" begin="-1.39s" ><mpath href="#ps3"/></animateMotion></circle>
+    <circle r="2.5" fill="#2a7a4b" filter="url(#pglow)"><animateMotion dur="1.85s" repeatCount="indefinite" begin="-1.85s" ><mpath href="#ps3"/></animateMotion></circle>
+
+    <!-- ── PARTICLES SEG 4: compliance items only (orange/red, fewer) ────── -->
+    <circle r="4"   fill="#c45000" filter="url(#pglow)"><animateMotion dur="1.65s" repeatCount="indefinite" begin="0s"    ><mpath href="#ps4"/></animateMotion></circle>
+    <circle r="3.5" fill="#a06b00" filter="url(#pglow)"><animateMotion dur="1.65s" repeatCount="indefinite" begin="-0.82s"><mpath href="#ps4"/></animateMotion></circle>
+    <circle r="3.5" fill="#c45000" filter="url(#pglow)"><animateMotion dur="1.65s" repeatCount="indefinite" begin="-1.4s" ><mpath href="#ps4"/></animateMotion></circle>
+  </svg>
+</div>
 
 <!-- ── OVERVIEW TAB ─────────────────────────────────────────────────────────── -->
 <div id="tab-main">
@@ -278,6 +463,10 @@
     All mentions classified — Brandwatch export {{ data.period }}
   </div>
 
+  <div class="page-info">
+    <strong>Overview</strong> — {{ data.total | default(0) }} social mentions ingested from Brandwatch and classified by sentiment and risk tier for {{ data.period }}. The pipeline above shows data flowing from source through the classification engine into the Jira compliance queue. Use the <em>Axi Select</em> tab to filter mentions containing "Axi Select" specifically.
+  </div>
+
   <div class="stats-grid" id="statsGrid"></div>
 
   <div class="two-col">
@@ -286,7 +475,7 @@
     <div class="panel">
       <div class="panel-header">
         <h2>Recent mentions</h2>
-        <a href="#">View all &rarr;</a>
+        <a href="{{ url_for('mentions') }}">View all &rarr;</a>
       </div>
       <table>
         <thead>
@@ -319,7 +508,7 @@
       <div class="panel">
         <div class="panel-header">
           <h2>Compliance queue</h2>
-          <a href="#">View all &rarr;</a>
+          <a href="{{ url_for('compliance') }}">View all &rarr;</a>
         </div>
         <div id="complianceList"></div>
       </div>
@@ -328,7 +517,7 @@
       <div class="panel">
         <div class="panel-header">
           <h2>Watch list — Apr 2026</h2>
-          <a href="#">View all &rarr;</a>
+          <a href="{{ url_for('watchlist') }}">View all &rarr;</a>
         </div>
         <div id="watchList"></div>
       </div>
@@ -337,7 +526,7 @@
       <div class="panel">
         <div class="panel-header">
           <h2>Platform coverage</h2>
-          <a href="#">View history &rarr;</a>
+          <a href="{{ url_for('runs') }}">View history &rarr;</a>
         </div>
         <div id="runsList"></div>
       </div>
@@ -432,9 +621,7 @@
   });
 
   // ── Render stat cards ────────────────────────────────────────────────────────
-  const l4count = DATA.compliance_queue.filter(c => c.tier === 'L4').length;
-  const l3count = DATA.compliance_queue.filter(c => c.tier === 'L3').length;
-  document.getElementById('navBadge').textContent = l4count;
+  const tc = DATA.tier_counts || {};
   document.getElementById('statsGrid').innerHTML = `
     <div class="stat-card total">
       <div class="label">Total mentions</div>
@@ -444,26 +631,26 @@
     <div class="stat-card l4">
       <div class="tier-indicator"></div>
       <div class="label">L4 — Crisis</div>
-      <div class="value">${l4count}</div>
+      <div class="value">${tc.L4 || 0}</div>
       <div class="sub">Respond within 6h</div>
     </div>
     <div class="stat-card l3">
       <div class="tier-indicator"></div>
       <div class="label">L3 — Serious</div>
-      <div class="value">${l3count}</div>
+      <div class="value">${tc.L3 || 0}</div>
       <div class="sub">Respond within 24h</div>
     </div>
     <div class="stat-card l2">
       <div class="tier-indicator"></div>
       <div class="label">L2 — Complaint</div>
-      <div class="value">${DATA.negative}</div>
-      <div class="sub">Negative mentions</div>
+      <div class="value">${tc.L2 || 0}</div>
+      <div class="sub">Monitor &amp; review</div>
     </div>
     <div class="stat-card l1">
       <div class="tier-indicator"></div>
       <div class="label">L1 — Monitor</div>
-      <div class="value">${DATA.neutral}</div>
-      <div class="sub">Neutral mentions</div>
+      <div class="value">${tc.L1 || 0}</div>
+      <div class="sub">Routine mentions</div>
     </div>
     <div class="stat-card positive">
       <div class="tier-indicator"></div>
