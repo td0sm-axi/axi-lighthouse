@@ -227,17 +227,17 @@ response_templates
 - [ ] APScheduler: crawler runs (daily), Jira sync (hourly), digest (weekly)
 - [ ] Prompt validation harness against real Axi mention export
 - [ ] L1–L4 tier definitions finalised from validation results
-- [ ] Credentials rotated, compliance PII sign-off
+- [ ] Credentials rotated before sharing dashboard access
 
 ---
 
 ## Open Questions (Decide During Build)
 
-1. **L1–L4 tier definitions** — finalised after running classifier against real Axi mention data in Phase 7
+1. **L1–L4 tier definitions** — defined in PLAN_Julie.md; to be validated against real Axi mention data in Phase 7 and adjusted if needed
 2. **Response templates** — need to be written per platform and category before Phase 4 can ship
 3. **Which Jira project key** handles mentions? CX? Legal?
 4. **Platform API credentials** — X, Meta, TikTok, LinkedIn all require app registration; confirm which accounts Axi has
-5. **PII compliance sign-off** — required before live mode touches real customer text
+5. **Anthropic API** — Axi corporate account; data stays within Axi's contracted environment. PII redactor runs before all Claude calls as good practice.
 
 ---
 

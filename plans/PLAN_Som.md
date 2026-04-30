@@ -149,7 +149,6 @@ Runs immediately after each mention is crawled. Three jobs per mention:
 3. **Persist to PostgreSQL** — write the full record before classification begins
    - Raw mention is written immediately on crawl so classification can start as soon as enrichment completes
    - If enrichment fails partway, the raw mention is still saved and retried on the next enrichment pass
-   - `pending_axi_reply` flag set here if the crawler detects an open thread where Axi has been tagged but not responded
    - **No deduplication** — if the same URL is picked up by multiple crawlers (e.g. a tweet captured by both X API and Google Custom Search), each is stored and classified as a separate mention. URL is not a unique constraint. Each crawler source is an independent signal.
 
 **Design note:** counting the same content twice from different sources is intentional — it reflects the reach of that mention across discovery channels and increases its weight in the engagement and trending calculations.
@@ -170,7 +169,7 @@ mentions
   summary               str | None        ← set by enrichment
   screenshot_path       str | None        ← set by enrichment
   created_at            datetime (UTC)
-  -- classification fields set by Julie, left NULL at this stage --
+  -- classification fields (including pending_axi_reply) set by Julie, left NULL at this stage --
 
 crawler_runs
   id                    UUID, primary key

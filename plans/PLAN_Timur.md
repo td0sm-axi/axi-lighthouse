@@ -113,7 +113,7 @@ Prompt file: `prompts/response_personalise.txt`
 
 > **Note on `category` field:** Category is assigned upstream — by Som's enrichment layer or Julie's classification pipeline — and arrives as a pre-populated field. Timur's response agent consumes it but does not determine it. Coordinate with Som and Julie to confirm the field name, allowed values, and which stage sets it.
 
-**Template categories (to be written before Phase 4 ships):**
+**Template categories:**
 
 | Category | Trigger | Routing | Template purpose |
 |---|---|---|---|
@@ -123,6 +123,28 @@ Prompt file: `prompts/response_personalise.txt`
 | Minor product complaint L2 | risk_level = L2, negative | `PENDING_AUTO_RESPOND` | Acknowledgement + resolution path |
 | L4 / client identified | risk_level = L4 or has_client_info | `PENDING_HUMAN_POST` | Empathetic acknowledgement + escalation to private support — no detail discussed publicly |
 | Forum mention | platform in FORUM_PLATFORMS | `PENDING_HUMAN_POST` | Community-appropriate acknowledgement + invite to contact support privately |
+
+**Template text (English — Claude translates to mention language at personalisation time):**
+
+**positive_review_app_store**
+> Thank you for taking the time to share your experience — it means a great deal to the whole Axi team. We're glad to be part of your trading journey and will keep working hard to deliver the platform and service you deserve. If there's ever anything we can improve, our support team is always here.
+
+**positive_review_other**
+> *(no response — LOGGED_ONLY)*
+
+**complaint_l1**
+> Thank you for reaching out. We're sorry to hear your experience hasn't met your expectations. We'd like to understand more about what happened and make sure it's resolved properly. Please contact our support team at [SUPPORT_LINK] — they'll be happy to help.
+
+**complaint_l2**
+> Thank you for bringing this to our attention. We understand how important this is, and we take feedback like yours seriously. Our team would like to look into this for you directly. Please reach out via [SUPPORT_LINK] with your account details and we'll work to resolve this as quickly as possible.
+
+**l4_client_identified**
+> Thank you for sharing your concerns. We understand this situation is important to you, and we want to make sure it receives the attention it deserves. To protect your privacy and ensure this is handled properly, we'd like to continue this conversation through a private channel. Please contact our support team via [SUPPORT_LINK] and a senior member of our team will follow up with you directly.
+
+**forum_mention**
+> Thanks for the discussion here. We'd encourage anyone with questions or concerns about their Axi account to reach out to our support team directly via [SUPPORT_LINK] — our team is best placed to help with account-specific queries and ensure any issues are resolved properly. We're always here to help.
+
+`[SUPPORT_LINK]` is replaced at personalisation time with the platform-appropriate support URL from `.env` (`SUPPORT_URL`). Claude personalises the tone and phrasing to the specific mention while keeping all constraints intact.
 
 **Per-platform posting methods:**
 

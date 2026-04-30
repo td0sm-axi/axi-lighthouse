@@ -64,6 +64,30 @@ Prompt: `prompts/stage1_sentiment.txt`
 
 ---
 
+### Step 1.25 — Pending Axi Reply Detection (deterministic, no Claude call)
+
+Runs on `raw_text` immediately after Stage 1 sentiment, before any escalation rules.
+
+`pending_axi_reply` is a content signal — the mention text itself indicates the user has not received a response from Axi (e.g. expressing frustration at being ignored, stating no one got back to them). It is not a thread-structure signal and is not set by the crawler.
+
+```python
+PENDING_REPLY_SIGNALS = [
+    "no reply", "never responded", "still waiting", "no response",
+    "no one got back", "hasn't replied", "waiting for axi",
+    "axi never", "no feedback from axi", "ignoring me",
+]
+
+def detect_pending_axi_reply(raw_text: str) -> bool:
+    text = raw_text.lower()
+    return any(signal in text for signal in PENDING_REPLY_SIGNALS)
+```
+
+Result written to `pending_axi_reply` on the mention row. The L4 client info escalation rule (Step 1.5 Rule 2) reads this value unchanged.
+
+File: `classification/platform_rules.py`
+
+---
+
 ### Step 1.5 — Platform Escalation Floor (deterministic, no Claude call)
 
 Before Stage 2 runs, apply a hard platform-based floor to the risk tier. This is a business rule — it is not subject to Claude's judgement and cannot be overridden by prompt tuning.
@@ -136,8 +160,8 @@ File: `classification/platform_rules.py`
 | Tier | Working Definition |
 |---|---|
 | L1 | Positive or neutral mention. No risk. Standard acknowledgement appropriate. |
-| L2 | Minor complaint or negative sentiment on a standard platform. No regulatory dimension. |
-| L3 | Serious complaint, withdrawal issue, KYC dispute, regulatory-adjacent language — OR any negative mention on a broker review site or financial community (platform floor). |
+| L2 | Minor complaint or negative sentiment on a standard platform. No regulatory dimension. Engagement below 10. Respond within 24h (auto). |
+| L3 | Serious complaint: fraud allegation, withdrawal issue, KYC dispute, leverage dispute, margin call, MT4/MT5 issue, regulatory-adjacent language — OR any L2 with 10+ engagements — OR any negative mention on a high-risk platform (platform floor). Respond within 24h (human post). |
 | L4 | Crisis-level: coordinated negative campaign, regulatory threat, media risk, legal language, L3 escalated by engagement volume — OR any mention containing identifiable client information — OR any mention where the client is awaiting a reply from Axi. Response is drafted automatically; human must approve and post. |
 
 These definitions must be validated against real Axi mention data before going live (see Verification).
@@ -170,15 +194,16 @@ This section defines the exact business rules to encode into the Stage 1 sentime
 - Positive or neutral mentions passing through (app store positive reviews are routed separately by code — Claude still labels them L1)
 - No regulatory language, no client data, no platform escalation trigger
 
-**L2 — Standard complaint, respond within 48h**
+**L2 — Standard complaint, respond within 24h**
 - Specific service complaint: withdrawal delay, KYC friction, platform outage, account access
 - No fraud or regulatory allegation
-- Engagement below 200
+- Engagement below 10
 - Not on a high-risk platform
 
-**L3 — Serious, respond within 24h**
+**L3 — Serious, respond within 24h (human must approve before posting)**
 - Fraud allegation, unauthorised transaction, data concern, regulatory language
-- Any L2 complaint with engagement above 200 (viral escalation)
+- Leverage dispute, margin call complaint, MT4/MT5 platform issue
+- Any L2 complaint with 10 or more engagements (viral escalation)
 - Any negative mention on: TrustPilot, BrokersView, FastBull, ForexPeaceArmy, Forex Factory, Google Play, Apple App Store, Reddit (r/Forex, r/Daytrading), Telegram, WhatsApp — platform floor enforced by code after Claude's call, but Claude should still reason toward L3 for these
 
 **L4 — Crisis, respond within 6h, Community Manager posts after human review**
@@ -236,6 +261,23 @@ classified_at             datetime
 
 Three routing statuses. Positive reviews outside app stores are never responded to — logged and counted only. App Store positive reviews always get a response. Everything needing human eyes gets a draft first.
 
+The pipeline also derives and writes a `category` field immediately after the routing decision, so Timur's response agent can look up the correct template without any conditional logic on his side:
+
+```python
+def derive_category(platform: str, sentiment: str, risk_level: str, has_client_info: bool) -> str:
+    if platform in FORUM_PLATFORMS:
+        return "forum_mention"
+    if has_client_info or risk_level == "L4":
+        return "l4_client_identified"
+    if sentiment == "positive" and platform in ("google_play", "app_store"):
+        return "positive_review_app_store"
+    if sentiment == "positive":
+        return "positive_review_other"
+    if risk_level == "L2":
+        return "complaint_l2"
+    return "complaint_l1"
+```
+
 After the DB write, the pipeline also scans the translated text for watch-list terms and sets `watch_flags` on the mention (comma-separated list of matched terms). This powers the trending section of the weekly digest and makes watch-list mentions searchable in the dashboard.
 
 **Watch list:**
@@ -275,9 +317,10 @@ mentions
   risk_level              str | None       ("L1" / "L2" / "L3" / "L4")
   risk_reasoning          str | None       (includes escalation annotations)
   has_client_info         bool             (True if PII markers found in redacted text)
-  pending_axi_reply       bool             (set by Som's crawler; True = client awaiting reply)
+  pending_axi_reply       bool             (detected from raw_text content by classification pipeline; True = mention indicates user awaiting reply from Axi)
   routing_status          str | None       ("LOGGED_ONLY" / "PENDING_AUTO_RESPOND" / "PENDING_HUMAN_POST")
   watch_flags             str | None       (comma-separated matched watch-list terms, e.g. "FCA,withdrawal")
+  category                str | None       ("positive_review_app_store" / "positive_review_other" / "complaint_l1" / "complaint_l2" / "l4_client_identified" / "forum_mention")
   classification_status   str | None       ("ok" / "error")
   classification_error    str | None       (error message if classification_status = "error")
   classified_at           datetime | None
@@ -295,7 +338,9 @@ mentions
 - [ ] `classification/stage2_risk.py` — Claude Sonnet call, parse JSON response
 - [ ] `classification/platform_rules.py` — `HIGH_RISK_PLATFORMS` + `apply_platform_floor()` + `apply_client_info_escalation()` + forum routing logic
 - [ ] `classification/pipeline.py` — continuous 60-second poll loop; picks up unclassified mentions as they arrive; orchestrates all steps; writes results immediately
-- [ ] Add `sentiment`, `risk_level`, `risk_reasoning`, `has_client_info`, `pending_axi_reply`, `routing_status`, `classified_at` columns to DB schema
+- [ ] Add `sentiment`, `risk_level`, `risk_reasoning`, `has_client_info`, `pending_axi_reply`, `routing_status`, `category`, `classified_at` columns to DB schema
+- [ ] `detect_pending_axi_reply()` in `classification/platform_rules.py` — keyword match on `raw_text`; runs after Stage 1, before escalation rules
+- [ ] `derive_category()` in `classification/pipeline.py` — written to DB alongside `routing_status`; consumed by Timur's response agent for template selection
 - [ ] Error handling: if Claude call fails (API error, timeout, JSON parse failure), mark mention `classification_status = error`, store the error message in `classification_error`, and surface it in the dashboard `/errors` view — do not crash the pipeline, do not silently skip
 
 ---
