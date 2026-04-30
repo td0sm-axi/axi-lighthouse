@@ -479,7 +479,7 @@
     <a href="#">Runs</a>
   </div>
   <div class="nav-right">
-    <span class="nav-time">Last crawl — 2 min ago</span>
+    <span class="nav-time" id="lastCrawlTime">Brandwatch export — Apr 2026</span>
     <div class="avatar">JS</div>
   </div>
 </nav>
@@ -489,7 +489,7 @@
   <div class="page-header">
     <h1>Overview</h1>
     <div class="date-range" id="dateRangeTrigger" onclick="toggleDatePicker()">
-      <span class="date-range-label" id="dateRangeLabel">28 Apr – 4 May 2026</span>
+      <span class="date-range-label" id="dateRangeLabel">Apr 1 – Apr 30 2026</span>
       <span class="date-range-icon">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.3">
           <rect x="1" y="2" width="11" height="10" rx="1"/>
@@ -525,49 +525,7 @@
   </div>
 
   <!-- STAT CARDS -->
-  <div class="stats-grid">
-    <div class="stat-card total">
-      <div class="label">Total this week</div>
-      <div class="value">214</div>
-      <div class="sub">↑ 18 vs last week</div>
-    </div>
-    <div class="stat-card l4">
-      <div class="tier-indicator"></div>
-      <div class="label">L4 — Crisis</div>
-      <div class="value">2</div>
-      <div class="sub">Respond within 6h</div>
-    </div>
-    <div class="stat-card l3">
-      <div class="tier-indicator"></div>
-      <div class="label">L3 — Serious</div>
-      <div class="value">11</div>
-      <div class="sub">Respond within 24h</div>
-    </div>
-    <div class="stat-card l2">
-      <div class="tier-indicator"></div>
-      <div class="label">L2 — Complaint</div>
-      <div class="value">38</div>
-      <div class="sub">Respond within 24h</div>
-    </div>
-    <div class="stat-card l1">
-      <div class="tier-indicator"></div>
-      <div class="label">L1 — Monitor</div>
-      <div class="value">163</div>
-      <div class="sub">Auto-handled</div>
-    </div>
-    <div class="stat-card positive">
-      <div class="tier-indicator"></div>
-      <div class="label">Positive reviews</div>
-      <div class="value">74</div>
-      <div class="sub">↑ 9 vs last week</div>
-    </div>
-    <div class="stat-card negative">
-      <div class="tier-indicator"></div>
-      <div class="label">Negative reviews</div>
-      <div class="value">91</div>
-      <div class="sub">↑ 14 vs last week</div>
-    </div>
-  </div>
+  <div class="stats-grid" id="statsGrid"></div>
 
   <!-- MAIN CONTENT -->
   <div class="two-col">
@@ -588,78 +546,7 @@
             <th>Time</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>
-              <div class="mention-text"><span class="sentiment-dot negative"></span>FCA complaint filed against Axi — still no response after 3 weeks</div>
-              <div class="mention-meta">@forex_trader_uk</div>
-            </td>
-            <td><span class="platform-tag">Reddit</span></td>
-            <td><span class="tier-badge tier-l4">L4</span></td>
-            <td class="eng">847</td>
-            <td class="time">4m ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div class="mention-text"><span class="sentiment-dot negative"></span>Withdrawal pending 3 weeks, support keeps closing my tickets</div>
-              <div class="mention-meta">@user_ae_2291</div>
-            </td>
-            <td><span class="platform-tag">TrustPilot</span></td>
-            <td><span class="tier-badge tier-l3">L3</span></td>
-            <td class="eng">34</td>
-            <td class="time">18m ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div class="mention-text"><span class="sentiment-dot negative"></span>Margin call executed incorrectly on my account, no explanation</div>
-              <div class="mention-meta">@daytrader_sg</div>
-            </td>
-            <td><span class="platform-tag">ForexPeaceArmy</span></td>
-            <td><span class="tier-badge tier-l3">L3</span></td>
-            <td class="eng">12</td>
-            <td class="time">41m ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div class="mention-text"><span class="sentiment-dot negative"></span>MT5 platform keeps freezing during high volatility</div>
-              <div class="mention-meta">@mt5_user_de</div>
-            </td>
-            <td><span class="platform-tag">X (Twitter)</span></td>
-            <td><span class="tier-badge tier-l3">L3</span></td>
-            <td class="eng">11</td>
-            <td class="time">1h ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div class="mention-text"><span class="sentiment-dot negative"></span>KYC verification taking too long, been waiting 5 days</div>
-              <div class="mention-meta">@newtrader_au</div>
-            </td>
-            <td><span class="platform-tag">Google Play</span></td>
-            <td><span class="tier-badge tier-l2">L2</span></td>
-            <td class="eng">3</td>
-            <td class="time">2h ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div class="mention-text"><span class="sentiment-dot positive"></span>Really smooth onboarding experience, account opened same day</div>
-              <div class="mention-meta">@trader_ph_88</div>
-            </td>
-            <td><span class="platform-tag">App Store</span></td>
-            <td><span class="tier-badge tier-l1">L1</span></td>
-            <td class="eng">1</td>
-            <td class="time">3h ago</td>
-          </tr>
-          <tr>
-            <td>
-              <div class="mention-text"><span class="sentiment-dot neutral"></span>Anyone know what Axi's max leverage is for gold?</div>
-              <div class="mention-meta">@r/Forex u/gold_scalper</div>
-            </td>
-            <td><span class="platform-tag">Reddit</span></td>
-            <td><span class="tier-badge tier-l1">L1</span></td>
-            <td class="eng">2</td>
-            <td class="time">5h ago</td>
-          </tr>
-        </tbody>
+        <tbody id="mentionsTbody"></tbody>
       </table>
     </div>
 
@@ -672,39 +559,7 @@
           <h2>Compliance queue</h2>
           <a href="#">View all →</a>
         </div>
-        <div class="compliance-item">
-          <div><span class="tier-badge tier-l4">L4</span></div>
-          <div class="compliance-body">
-            <div class="compliance-title">FCA complaint — Reddit r/Forex</div>
-            <div class="compliance-meta">Reddit · 847 engagements · 4m ago</div>
-            <div class="compliance-actions">
-              <button class="btn btn-primary">Review draft</button>
-              <button class="btn btn-ghost">Escalate</button>
-            </div>
-          </div>
-        </div>
-        <div class="compliance-item">
-          <div><span class="tier-badge tier-l4">L4</span></div>
-          <div class="compliance-body">
-            <div class="compliance-title">Client PII detected — TrustPilot</div>
-            <div class="compliance-meta">TrustPilot · 22 engagements · 6h ago</div>
-            <div class="compliance-actions">
-              <button class="btn btn-primary">Review draft</button>
-              <button class="btn btn-ghost">Escalate</button>
-            </div>
-          </div>
-        </div>
-        <div class="compliance-item">
-          <div><span class="tier-badge tier-l3">L3</span></div>
-          <div class="compliance-body">
-            <div class="compliance-title">Withdrawal complaint — TrustPilot</div>
-            <div class="compliance-meta">TrustPilot · 34 engagements · 18m ago</div>
-            <div class="compliance-actions">
-              <button class="btn btn-primary">Review draft</button>
-              <button class="btn btn-danger">Dismiss</button>
-            </div>
-          </div>
-        </div>
+        <div id="complianceList"></div>
       </div>
 
       <!-- WATCH LIST -->
@@ -750,11 +605,7 @@
           <h2>Last crawler run</h2>
           <a href="#">View history →</a>
         </div>
-        <div class="runs-row"><div class="run-status"></div><div class="run-platform">Reddit</div><div class="run-count">12 mentions</div><div class="run-time">2 min ago</div></div>
-        <div class="runs-row"><div class="run-status"></div><div class="run-platform">TrustPilot</div><div class="run-count">7 mentions</div><div class="run-time">2 min ago</div></div>
-        <div class="runs-row"><div class="run-status"></div><div class="run-platform">X (Twitter)</div><div class="run-count">31 mentions</div><div class="run-time">3 min ago</div></div>
-        <div class="runs-row"><div class="run-status"></div><div class="run-platform">Google Play</div><div class="run-count">4 mentions</div><div class="run-time">3 min ago</div></div>
-        <div class="runs-row"><div class="run-status err"></div><div class="run-platform">TikTok</div><div class="run-count" style="color:var(--l4)">API error</div><div class="run-time">3 min ago</div></div>
+        <div id="runsList"></div>
       </div>
 
     </div>
@@ -762,6 +613,7 @@
 
 </div>
 <script>
+  // ── Date picker ──────────────────────────────────────────────────────────────
   function toggleDatePicker() {
     document.getElementById('datePicker').classList.toggle('open');
   }
@@ -783,10 +635,114 @@
   }
   document.addEventListener('click', e => {
     const trigger = document.getElementById('dateRangeTrigger');
-    if (!trigger.contains(e.target)) {
-      document.getElementById('datePicker').classList.remove('open');
-    }
+    if (!trigger.contains(e.target)) document.getElementById('datePicker').classList.remove('open');
   });
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function timeAgo(dateStr) {
+    const diff = (Date.now() - new Date(dateStr)) / 1000;
+    if (diff < 3600)   return Math.round(diff / 60) + 'm ago';
+    if (diff < 86400)  return Math.round(diff / 3600) + 'h ago';
+    return Math.round(diff / 86400) + 'd ago';
+  }
+  function tierClass(t) {
+    return { L1:'tier-l1', L2:'tier-l2', L3:'tier-l3', L4:'tier-l4' }[t] || 'tier-l1';
+  }
+  function esc(s) {
+    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── Brandwatch data (generated from mentions (3).csv) ──────────────────────
+  const DATA = {"generated": "2026-04-30", "period": "Apr 1 – Apr 30 2026", "total": 1778, "positive": 209, "negative": 103, "neutral": 1466, "recent_mentions": [{"text": "XAUUSD Signal:-  ✅ Trade Type: BUY 📍 Entry Price: 4559.160 🎯 Take Profit: TP1: 4583.017, TP2: 4607.861 🛑 Stop Loss: 4545", "author": "ForexVisit", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-30 06:10:55.000", "url": "http://twitter.com/ForexVisit/statuses/2049733213950722411"}, {"text": "GBPCAD @ (SELL) Target Hit 🎯 Best Broker for This Signal:  https://t.co/DXtsvxBqTA https://t.co/pxcEfuTTNx", "author": "ForexVisit", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-30 06:01:49.000", "url": "http://twitter.com/ForexVisit/statuses/2049730925467254895"}, {"text": "Axi Select Program: Unlock Funded Trading for Free  https://t.co/jsrtTLmGNW   #BrokerXplorer #Axi #AxiSelect #Profit #Ed", "author": "BrokerXplorer", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-30 03:13:32.000", "url": "http://twitter.com/BrokerXplorer/statuses/2049688576200437962"}, {"text": "ETHUSD @ (SELL) Target Hit 🎯 Best Broker for This Signal:  https://t.co/DXtsvxBqTA https://t.co/PAw0XJFmwF", "author": "ForexVisit", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-29 14:47:43.000", "url": "http://twitter.com/ForexVisit/statuses/2049500885144015194"}, {"text": "想像以上にdarwinexの旅路が長い axi selectはるかに超える", "author": "gensosijin", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 3, "date": "2026-04-29 13:47:24.000", "url": "http://twitter.com/gensosijin/statuses/2049485707455139893"}, {"text": "ETHUSD @ (SELL) 1st Target Hit 🎯 Best Broker for This Signal:  https://t.co/DXtsvxBqTA https://t.co/hFCZF0mFt1", "author": "ForexVisit", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 1, "date": "2026-04-29 12:34:35.000", "url": "http://twitter.com/ForexVisit/statuses/2049467380305404088"}, {"text": "🔔 Rate decisions take centre stage while Trump is distracted by King Charles. Promoted by AxiTrader LLC. OTC derivatives", "author": "Axi", "platform": "Facebook", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-29 12:01:30.000", "url": "https://www.facebook.com/210629932123798/posts/122250170636148057#channels"}, {"text": "RT @kathylienfx Must watch 👇I speak to Axi Select traders on @axi_official new podcast https://t.co/jR8ovQMW7t", "author": "Ismaildanzabuwa", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-29 11:11:49.000", "url": "http://twitter.com/Ismaildanzabuwa/statuses/2049446553622884395"}, {"text": "ETHUSD Signal:-  ✅ Trade Type: SELL 📍 Entry Price: 2346.48 🎯 Take Profit: TP1: 2318.65, TP1: 2290.78 🛑 Stop Loss: 2356.0", "author": "ForexVisit", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 1, "date": "2026-04-29 10:06:07.000", "url": "http://twitter.com/ForexVisit/statuses/2049430017340510276"}, {"text": "GBPCAD Signal:-  ✅ Trade Type: SELL 📍 Entry Price: 1.84806 🎯 Take Profit: TP1: 1.84488, TP2: .1.86161 🛑 Stop Loss: 1.849", "author": "ForexVisit", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 1, "date": "2026-04-29 09:55:49.000", "url": "http://twitter.com/ForexVisit/statuses/2049427426196046055"}, {"text": "Die Energiehandelsplattformbranche wird ein bemerkenswertes Wachstum verzeichnen.", "author": "Sam Evan Khandagale", "platform": "Ekz-crosstour", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-29 09:04:00.000", "url": "https://ekz-crosstour.ch/2026/04/29/die-energiehandelsplattformbranche-wird-ein-bemerkenswertes-wachstum-verzeichnen/"}, {"text": "Must watch 👇I speak to Axi Select traders on @axi_official new podcast", "author": "kathylienfx", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 5, "date": "2026-04-29 09:04:00.000", "url": "http://twitter.com/kathylienfx/statuses/2049414385081442499"}, {"text": "USDCHF Signal:-  ✅ Trade Type: BUY 📍 Entry Price: 0.78826 🎯 Take Profit: TP1: 0.79077, TP2: 0.79330 🛑 Stop Loss: 0.78703", "author": "ForexVisit", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-29 08:02:57.000", "url": "http://twitter.com/ForexVisit/statuses/2049399023698837613"}, {"text": "XAUUSD Signal:-  ✅ Trade Type: BUY 📍 Entry Price: 4559.160 🎯 Take Profit: TP1: 4583.017, TP2: 4607.861 🛑 Stop Loss: 4545", "author": "ForexVisit", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 1, "date": "2026-04-29 07:20:21.000", "url": "http://twitter.com/ForexVisit/statuses/2049388301212389811"}, {"text": "Prop firm Hub", "author": "RantaMin", "platform": "Elitetrader", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-29 07:10:00.000", "url": "https://www.elitetrader.com/et/threads/prop-firm-hub.384730/latest#post-6254485#ebb13c0287a796ed423fb2ad94d4091b"}, {"text": "AxiSelectはシートステージ。リスク管理と経験は評価が高いものの、スキルと一貫性については未熟。ここ最近、ようやく手法に一貫性が付いてきたのでスコアを伸ばしたい。  #Axi #AxiSelect https://t.co/AdjLD", "author": "FX_XAUUSD_GOLD_", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-29 04:25:13.000", "url": "http://twitter.com/FX_XAUUSD_GOLD_/statuses/2049344226815832494"}, {"text": "Get More Trading Power with Axi 100 Percent Deposit Bonus  https://t.co/BRU5uSjf7O   #BrokerXplorer #Axi #DepositBonus #", "author": "BrokerXplorer", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-29 02:59:36.000", "url": "http://twitter.com/BrokerXplorer/statuses/2049322683394130154"}, {"text": "【Axi Select】自己資金の限界を突破する革新的プログラム 🚨  自己資金でのトレードに限界を感じていませんか？ Axiが提供する「Axi Select」は、従来のプロップファームのような高額な参加費やテスト費用を支払うことなく、プロ", "author": "invest_Diary", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-28 16:35:11.000", "url": "http://twitter.com/invest_Diary/statuses/2049165541542445417"}, {"text": "#日銀 の政策金利発表前後の #USDJPY のスプレッド推移について、どの業者も安定していたようです。  #HFM katana口座 　　 0.4~0.6pips #Exness プロ口座 　　 0.7pips #Axi スタンダード口座", "author": "kaigaiFXwiki", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 1, "date": "2026-04-28 15:13:59.000", "url": "http://twitter.com/kaigaiFXwiki/statuses/2049145108088631722"}, {"text": "RT @cntrader666 炒外汇  炒黄金 用MT4 MT5 必备——云融汇返 | 外汇返佣网  ✅各大主流外汇平台开户 ✅最高比例返佣 ✅最高效的客服服务 ✅老牌代理保护你的出入金安全  Exness | Tmgm | Xm |Ti", "author": "MarkJason_Chen", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-28 12:19:19.000", "url": "http://twitter.com/MarkJason_Chen/statuses/2049101149547233638"}, {"text": "Standard or Pro. Choose the account that fits your trading style and experience. Designed to give you the flexibility to", "author": "Axi", "platform": "Facebook", "sentiment": "neutral", "tier": "L1", "engagement": 1, "date": "2026-04-28 06:01:05.000", "url": "https://www.facebook.com/210629932123798/posts/122250045962148057#channels"}, {"text": "🚀 WE’RE HIRING! Technical Business Analyst — Remote (PH)  Join Axi, a global leader in FX, CFDs, and trading tech.   🔍 R", "author": "exrecca07", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-28 04:29:07.000", "url": "http://twitter.com/exrecca07/statuses/2048982821335875702"}, {"text": "Turn Your Trades into Extra Income with Axi Cashback up to $720  https://t.co/5bMZ0NRhGH   #BrokerXplorer #Axi #Indonesi", "author": "BrokerXplorer", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-28 03:27:24.000", "url": "http://twitter.com/BrokerXplorer/statuses/2048967291195564320"}, {"text": "We’re excited to have Axi Select back as a sponsor of https://t.co/OsKYwI7TH0  The only 100% free funded trader program ", "author": "kathylienfx", "platform": "X (Twitter)", "sentiment": "positive", "tier": "L1", "engagement": 7, "date": "2026-04-28 00:09:50.000", "url": "http://twitter.com/kathylienfx/statuses/2048917570980339759"}, {"text": "We’re excited to have Axi Select back as a sponsor of https://t.co/OsKYwI7TH0  The only 100% free funded trader program ", "author": "kathylienfx", "platform": "X (Twitter)", "sentiment": "neutral", "tier": "L1", "engagement": 0, "date": "2026-04-28 00:09:40.000", "url": "http://twitter.com/kathylienfx/statuses/2048917529267978454"}], "compliance_queue": [{"title": "【Axi Select】 30分以内ダメ〜はさすがに乱暴すぎませんか？😅", "platform": "X (Twitter)", "engagement": 4, "tier": "L2", "date": "2026-04-01 11:57:51.000", "url": "http://twitter.com/AOI_FX_LOOP/statuses/2039311276309094440"}, {"title": "Kan. Maar hij heeft wel een punt. Megapunt. We waggelen maar voort en voort, zo ", "platform": "Bsky", "engagement": 1, "tier": "L2", "date": "2026-04-22 16:54:20.000", "url": "https://bsky.app/profile/did:plc:bj3loonwkqh2xrmytrpb2cm4/post/3mk3xl3qsec2w"}, {"title": "Axi Select, 아시아 출신 네 번째 트레이더가 Pro M 등급 및 100만달러 계좌 확보하며 주요 이정표 달성 https://t.co/v", "platform": "X (Twitter)", "engagement": 1, "tier": "L2", "date": "2026-04-03 04:29:44.000", "url": "http://twitter.com/ochunja453662/statuses/2039923277834146063"}, {"title": "Top 6 Prop Firms That Allow EA And Algorithmic Trading in 2026", "platform": "Sokodirectory", "engagement": 0, "tier": "L2", "date": "2026-04-27 11:01:00.000", "url": "https://sokodirectory.com/2026/04/top-6-prop-firms-that-allow-ea-and-algorithmic-trading-in-2026/"}, {"title": "Comment on video https://www.youtube.com/watch?v=uqrrgXB8dfw", "platform": "YouTube", "engagement": 0, "tier": "L2", "date": "2026-04-23 22:01:51.000", "url": "https://www.youtube.com/watch?v=uqrrgXB8dfw&lc=UgyxqzxlQq8RikyXejN4AaABAg"}], "platform_counts": [["X (Twitter)", 249], ["Facebook", 33], ["Vidamoderna", 22], ["YouTube", 20], ["Reddit", 17], ["Globenewswire", 14], ["Benzinga", 12], ["Falklandsbusinessjournal", 8]]};
+
+  // ── Render stat cards ────────────────────────────────────────────────────────
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card total">
+      <div class="label">Total mentions</div>
+      <div class="value">${DATA.total.toLocaleString()}</div>
+      <div class="sub">${DATA.period}</div>
+    </div>
+    <div class="stat-card l4">
+      <div class="tier-indicator"></div>
+      <div class="label">L4 — Crisis</div>
+      <div class="value">${DATA.compliance_queue.filter(c=>c.tier==='L4').length}</div>
+      <div class="sub">Respond within 6h</div>
+    </div>
+    <div class="stat-card l3">
+      <div class="tier-indicator"></div>
+      <div class="label">L3 — Serious</div>
+      <div class="value">${DATA.compliance_queue.filter(c=>c.tier==='L3').length}</div>
+      <div class="sub">Respond within 24h</div>
+    </div>
+    <div class="stat-card l2">
+      <div class="tier-indicator"></div>
+      <div class="label">L2 — Complaint</div>
+      <div class="value">${DATA.negative}</div>
+      <div class="sub">Negative mentions</div>
+    </div>
+    <div class="stat-card l1">
+      <div class="tier-indicator"></div>
+      <div class="label">L1 — Monitor</div>
+      <div class="value">${DATA.neutral}</div>
+      <div class="sub">Neutral mentions</div>
+    </div>
+    <div class="stat-card positive">
+      <div class="tier-indicator"></div>
+      <div class="label">Positive</div>
+      <div class="value">${DATA.positive}</div>
+      <div class="sub">${Math.round(DATA.positive / DATA.total * 100)}% of total</div>
+    </div>
+    <div class="stat-card negative">
+      <div class="tier-indicator"></div>
+      <div class="label">Negative</div>
+      <div class="value">${DATA.negative}</div>
+      <div class="sub">${Math.round(DATA.negative / DATA.total * 100)}% of total</div>
+    </div>`;
+
+  // ── Render mentions table ────────────────────────────────────────────────────
+  document.getElementById('mentionsTbody').innerHTML = DATA.recent_mentions.map(m => `
+    <tr onclick="window.open('${esc(m.url)}','_blank')">
+      <td>
+        <div class="mention-text">
+          <span class="sentiment-dot ${esc(m.sentiment)}"></span>${esc(m.text)}
+        </div>
+        <div class="mention-meta">@${esc(m.author)}</div>
+      </td>
+      <td><span class="platform-tag">${esc(m.platform)}</span></td>
+      <td><span class="tier-badge ${tierClass(m.tier)}">${esc(m.tier)}</span></td>
+      <td class="eng">${m.engagement > 0 ? m.engagement.toLocaleString() : '—'}</td>
+      <td class="time">${timeAgo(m.date)}</td>
+    </tr>`).join('');
+
+  // ── Render compliance queue ───────────────────────────────────────────────────
+  document.getElementById('complianceList').innerHTML = DATA.compliance_queue.length
+    ? DATA.compliance_queue.map(c => `
+        <div class="compliance-item">
+          <div><span class="tier-badge ${tierClass(c.tier)}">${esc(c.tier)}</span></div>
+          <div class="compliance-body">
+            <div class="compliance-title">${esc(c.title)}</div>
+            <div class="compliance-meta">${esc(c.platform)} · ${c.engagement > 0 ? c.engagement.toLocaleString() + ' eng' : 'low eng'} · ${timeAgo(c.date)}</div>
+            <div class="compliance-actions">
+              <button class="btn btn-primary">Review draft</button>
+              <button class="btn ${c.tier==='L4' ? 'btn-ghost' : 'btn-danger'}">${c.tier==='L4' ? 'Escalate' : 'Dismiss'}</button>
+            </div>
+          </div>
+        </div>`).join('')
+    : '<div class="watch-quiet">No high-priority items.</div>';
+
+  // ── Render platform breakdown ─────────────────────────────────────────────────
+  document.getElementById('runsList').innerHTML = DATA.platform_counts.map(([p, c]) => `
+    <div class="runs-row">
+      <div class="run-status"></div>
+      <div class="run-platform">${esc(p)}</div>
+      <div class="run-count">${c.toLocaleString()} mentions</div>
+      <div class="run-time">Brandwatch export</div>
+    </div>`).join('');
+
+  // ── Update compliance badge in nav ───────────────────────────────────────────
+  const l4count = DATA.compliance_queue.filter(c => c.tier === 'L4').length;
+  const badge = document.querySelector('.badge-alert');
+  if (badge) badge.textContent = l4count;
 </script>
 </body>
 </html>
