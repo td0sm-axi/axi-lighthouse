@@ -275,7 +275,7 @@
       "url": "https://www.forexpeacearmy.com/community/threads/axi-domestic-withdrawals-for-singapore.88989/#post-489413#41d5a6dbdcc7f550b75fdc00531f31e6"
     },
     {
-      "title": "",
+      "title": "prop firm fees axi select vs forex funder vs",
       "platform": "Reddit",
       "engagement": 0,
       "tier": "L3",
@@ -283,7 +283,7 @@
       "url": "https://www.reddit.com/r/joinprop/comments/1sqlvd9/prop_firm_fees_axi_select_vs_forex_funder_vs/"
     },
     {
-      "title": "",
+      "title": "ogeac56",
       "platform": "Reddit",
       "engagement": 0,
       "tier": "L3",
@@ -291,7 +291,7 @@
       "url": "https://www.reddit.com/r/Trading/comments/1smhtf5/comment/ogeac56/"
     },
     {
-      "title": "",
+      "title": "growing a small account",
       "platform": "Reddit",
       "engagement": 0,
       "tier": "L3",
@@ -299,7 +299,7 @@
       "url": "https://www.reddit.com/r/Trading/comments/1smhtf5/growing_a_small_account/"
     },
     {
-      "title": "",
+      "title": "does axi select offer any discount",
       "platform": "Reddit",
       "engagement": 0,
       "tier": "L3",
@@ -307,7 +307,7 @@
       "url": "https://www.reddit.com/r/PropfirmsForum/comments/1sevyz7/does_axi_select_offer_any_discount/"
     },
     {
-      "title": "",
+      "title": "oei5fex",
       "platform": "Reddit",
       "engagement": 0,
       "tier": "L3",
@@ -315,7 +315,7 @@
       "url": "https://www.reddit.com/r/Daytrading/comments/1sd2klt/comment/oei5fex/"
     },
     {
-      "title": "",
+      "title": "oeh2aw9",
       "platform": "Reddit",
       "engagement": 0,
       "tier": "L3",
@@ -323,7 +323,7 @@
       "url": "https://www.reddit.com/r/Daytrading/comments/1sd2klt/comment/oeh2aw9/"
     },
     {
-      "title": "",
+      "title": "odnpvm2",
       "platform": "Reddit",
       "engagement": 0,
       "tier": "L3",
@@ -373,16 +373,275 @@
       8
     ]
   ],
+  "ticket_candidates": [
+    {
+      "id": "bw-001",
+      "platform": "Forexpeacearmy",
+      "author": "FxMaster",
+      "summary": "Axi domestic withdrawals for singapore",
+      "sentiment": "negative",
+      "sentiment_reasoning": "Negative sentiment from Brandwatch export (Forexpeacearmy)",
+      "risk_level": "L3",
+      "risk_reasoning": "L3: negative mention on Forexpeacearmy",
+      "raw_text": "Axi domestic withdrawals for singapore",
+      "raw_text_redacted": "Axi domestic withdrawals for singapore",
+      "engagement": 0,
+      "posted_at": "2026-04-23 12:10:00.000",
+      "url": "https://www.forexpeacearmy.com/community/threads/axi-domestic-withdrawals-for-singapore.88989/#post-489441#2367ef6b766072fd6e71abe467f4c521",
+      "has_client_info": false,
+      "watch_flags": ""
+    },
+    {
+      "id": "bw-002",
+      "platform": "Forexpeacearmy",
+      "author": "jigadijac82",
+      "summary": "Axi domestic withdrawals for singapore",
+      "sentiment": "negative",
+      "sentiment_reasoning": "Negative sentiment from Brandwatch export (Forexpeacearmy)",
+      "risk_level": "L3",
+      "risk_reasoning": "L3: negative mention on Forexpeacearmy",
+      "raw_text": "Axi domestic withdrawals for singapore",
+      "raw_text_redacted": "Axi domestic withdrawals for singapore",
+      "engagement": 0,
+      "posted_at": "2026-04-23 05:02:00.000",
+      "url": "https://www.forexpeacearmy.com/community/threads/axi-domestic-withdrawals-for-singapore.88989/#post-489413#41d5a6dbdcc7f550b75fdc00531f31e6",
+      "has_client_info": false,
+      "watch_flags": ""
+    },
+    {
+      "id": "bw-003",
+      "platform": "Reddit",
+      "author": "",
+      "summary": "prop firm fees axi select vs forex funder vs",
+      "sentiment": "negative",
+      "sentiment_reasoning": "Negative sentiment from Brandwatch export (Reddit)",
+      "risk_level": "L3",
+      "risk_reasoning": "L3: negative mention on Reddit",
+      "raw_text": "prop firm fees axi select vs forex funder vs",
+      "raw_text_redacted": "prop firm fees axi select vs forex funder vs",
+      "engagement": 0,
+      "posted_at": "",
+      "url": "https://www.reddit.com/r/joinprop/comments/1sqlvd9/prop_firm_fees_axi_select_vs_forex_funder_vs/",
+      "has_client_info": false,
+      "watch_flags": ""
+    },
+    {
+      "id": "bw-004",
+      "platform": "Reddit",
+      "author": "",
+      "summary": "ogeac56",
+      "sentiment": "negative",
+      "sentiment_reasoning": "Negative sentiment from Brandwatch export (Reddit)",
+      "risk_level": "L3",
+      "risk_reasoning": "L3: negative mention on Reddit",
+      "raw_text": "ogeac56",
+      "raw_text_redacted": "ogeac56",
+      "engagement": 0,
+      "posted_at": "",
+      "url": "https://www.reddit.com/r/Trading/comments/1smhtf5/comment/ogeac56/",
+      "has_client_info": false,
+      "watch_flags": ""
+    },
+    {
+      "id": "bw-005",
+      "platform": "Reddit",
+      "author": "",
+      "summary": "growing a small account",
+      "sentiment": "negative",
+      "sentiment_reasoning": "Negative sentiment from Brandwatch export (Reddit)",
+      "risk_level": "L3",
+      "risk_reasoning": "L3: negative mention on Reddit",
+      "raw_text": "growing a small account",
+      "raw_text_redacted": "growing a small account",
+      "engagement": 0,
+      "posted_at": "",
+      "url": "https://www.reddit.com/r/Trading/comments/1smhtf5/growing_a_small_account/",
+      "has_client_info": false,
+      "watch_flags": ""
+    },
+    {
+      "id": "bw-006",
+      "platform": "Reddit",
+      "author": "",
+      "summary": "does axi select offer any discount",
+      "sentiment": "negative",
+      "sentiment_reasoning": "Negative sentiment from Brandwatch export (Reddit)",
+      "risk_level": "L3",
+      "risk_reasoning": "L3: negative mention on Reddit",
+      "raw_text": "does axi select offer any discount",
+      "raw_text_redacted": "does axi select offer any discount",
+      "engagement": 0,
+      "posted_at": "",
+      "url": "https://www.reddit.com/r/PropfirmsForum/comments/1sevyz7/does_axi_select_offer_any_discount/",
+      "has_client_info": false,
+      "watch_flags": ""
+    },
+    {
+      "id": "bw-007",
+      "platform": "Reddit",
+      "author": "",
+      "summary": "oei5fex",
+      "sentiment": "negative",
+      "sentiment_reasoning": "Negative sentiment from Brandwatch export (Reddit)",
+      "risk_level": "L3",
+      "risk_reasoning": "L3: negative mention on Reddit",
+      "raw_text": "oei5fex",
+      "raw_text_redacted": "oei5fex",
+      "engagement": 0,
+      "posted_at": "",
+      "url": "https://www.reddit.com/r/Daytrading/comments/1sd2klt/comment/oei5fex/",
+      "has_client_info": false,
+      "watch_flags": ""
+    },
+    {
+      "id": "bw-008",
+      "platform": "Reddit",
+      "author": "",
+      "summary": "oeh2aw9",
+      "sentiment": "negative",
+      "sentiment_reasoning": "Negative sentiment from Brandwatch export (Reddit)",
+      "risk_level": "L3",
+      "risk_reasoning": "L3: negative mention on Reddit",
+      "raw_text": "oeh2aw9",
+      "raw_text_redacted": "oeh2aw9",
+      "engagement": 0,
+      "posted_at": "",
+      "url": "https://www.reddit.com/r/Daytrading/comments/1sd2klt/comment/oeh2aw9/",
+      "has_client_info": false,
+      "watch_flags": ""
+    },
+    {
+      "id": "bw-009",
+      "platform": "Reddit",
+      "author": "",
+      "summary": "odnpvm2",
+      "sentiment": "negative",
+      "sentiment_reasoning": "Negative sentiment from Brandwatch export (Reddit)",
+      "risk_level": "L3",
+      "risk_reasoning": "L3: negative mention on Reddit",
+      "raw_text": "odnpvm2",
+      "raw_text_redacted": "odnpvm2",
+      "engagement": 0,
+      "posted_at": "",
+      "url": "https://www.reddit.com/r/proptrading/comments/1s7fdnj/comment/odnpvm2/",
+      "has_client_info": false,
+      "watch_flags": ""
+    },
+    {
+      "id": "bw-010",
+      "platform": "X (Twitter)",
+      "author": "AOI_FX_LOOP",
+      "summary": "【Axi Select】 30分以内ダメ〜はさすがに乱暴すぎませんか？😅",
+      "sentiment": "negative",
+      "sentiment_reasoning": "Negative sentiment from Brandwatch export (X (Twitter))",
+      "risk_level": "L2",
+      "risk_reasoning": "L2: negative mention on X (Twitter) with 4 engagements",
+      "raw_text": "【Axi Select】 30分以内ダメ〜はさすがに乱暴すぎませんか？😅",
+      "raw_text_redacted": "【Axi Select】 30分以内ダメ〜はさすがに乱暴すぎませんか？😅",
+      "engagement": 4,
+      "posted_at": "2026-04-01 11:57:51.000",
+      "url": "http://twitter.com/AOI_FX_LOOP/statuses/2039311276309094440",
+      "has_client_info": false,
+      "watch_flags": ""
+    }
+  ],
+  "watch_counts": [
+    {
+      "term": "ASIC",
+      "count": 6,
+      "tier": "L4"
+    },
+    {
+      "term": "spread",
+      "count": 4,
+      "tier": "L2"
+    },
+    {
+      "term": "withdrawal",
+      "count": 4,
+      "tier": "L3"
+    },
+    {
+      "term": "scam",
+      "count": 3,
+      "tier": "L4"
+    },
+    {
+      "term": "leverage",
+      "count": 2,
+      "tier": "L3"
+    },
+    {
+      "term": "FCA",
+      "count": 1,
+      "tier": "L4"
+    },
+    {
+      "term": "Pepperstone",
+      "count": 1,
+      "tier": "L2"
+    },
+    {
+      "term": "CMC Markets",
+      "count": 0,
+      "tier": "L2"
+    },
+    {
+      "term": "Capital.com",
+      "count": 0,
+      "tier": "L2"
+    },
+    {
+      "term": "CySEC",
+      "count": 0,
+      "tier": "L4"
+    },
+    {
+      "term": "DFSA",
+      "count": 0,
+      "tier": "L4"
+    },
+    {
+      "term": "FxPro",
+      "count": 0,
+      "tier": "L2"
+    },
+    {
+      "term": "KYC",
+      "count": 0,
+      "tier": "L2"
+    },
+    {
+      "term": "compensation",
+      "count": 0,
+      "tier": "L3"
+    },
+    {
+      "term": "fraud",
+      "count": 0,
+      "tier": "L4"
+    },
+    {
+      "term": "investigation",
+      "count": 0,
+      "tier": "L4"
+    },
+    {
+      "term": "margin call",
+      "count": 0,
+      "tier": "L3"
+    }
+  ],
   "axi_select": {
-    "total": 329,
+    "total": 332,
     "positive": 96,
-    "negative": 6,
-    "neutral": 227,
+    "negative": 8,
+    "neutral": 228,
     "by_tier": {
       "L4": 0,
-      "L3": 0,
+      "L3": 2,
       "L2": 6,
-      "L1": 323
+      "L1": 324
     },
     "by_platform": [
       [
@@ -402,6 +661,10 @@
         5
       ],
       [
+        "Reddit",
+        3
+      ],
+      [
         "Latinamericabusinesstoday",
         3
       ],
@@ -411,10 +674,6 @@
       ],
       [
         "Finanzen",
-        2
-      ],
-      [
-        "Morocconewsgazette",
         2
       ]
     ],
@@ -671,6 +930,22 @@
       }
     ],
     "compliance_queue": [
+      {
+        "title": "prop firm fees axi select vs forex funder vs",
+        "platform": "Reddit",
+        "engagement": 0,
+        "tier": "L3",
+        "date": "",
+        "url": "https://www.reddit.com/r/joinprop/comments/1sqlvd9/prop_firm_fees_axi_select_vs_forex_funder_vs/"
+      },
+      {
+        "title": "does axi select offer any discount",
+        "platform": "Reddit",
+        "engagement": 0,
+        "tier": "L3",
+        "date": "",
+        "url": "https://www.reddit.com/r/PropfirmsForum/comments/1sevyz7/does_axi_select_offer_any_discount/"
+      },
       {
         "title": "【Axi Select】 30分以内ダメ〜はさすがに乱暴すぎませんか？😅",
         "platform": "X (Twitter)",

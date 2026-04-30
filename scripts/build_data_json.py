@@ -34,6 +34,27 @@ ESCALATION_PLATFORMS = {
 
 AXI_SELECT_RE = re.compile(r"axi[\s_-]?select", re.IGNORECASE)
 
+# Julie's classification layer watch terms → tier
+WATCH_TERMS = {
+    "FCA":           "L4",
+    "CySEC":         "L4",
+    "ASIC":          "L4",
+    "DFSA":          "L4",
+    "Pepperstone":   "L2",
+    "FxPro":         "L2",
+    "CMC Markets":   "L2",
+    "Capital.com":   "L2",
+    "withdrawal":    "L3",
+    "spread":        "L2",
+    "leverage":      "L3",
+    "KYC":           "L2",
+    "margin call":   "L3",
+    "scam":          "L4",
+    "fraud":         "L4",
+    "compensation":  "L3",
+    "investigation": "L4",
+}
+
 
 def _platform_from_domain(domain: str) -> str:
     """Turn a bare domain into a readable platform label."""
@@ -97,8 +118,24 @@ def read_csv(path: Path) -> list[dict]:
     return data
 
 
+def _title_from_url(url: str) -> str:
+    """Extract a readable slug from a URL when Title is blank."""
+    path = url.split("?")[0].rstrip("/")
+    slug = path.split("/")[-1] if "/" in path else path
+    return slug.replace("-", " ").replace("_", " ")[:100] if slug else url[:80]
+
+
 def build_mention(row: dict) -> dict:
-    text      = (row.get("Title") or "").replace("\n", " ").replace("\r", "").strip()
+    text = (row.get("Title") or "").replace("\n", " ").replace("\r", "").strip()
+    # Fallback: use Snippet, then URL slug, for rows with no Title (e.g. Reddit comments)
+    if not text:
+        snippet = (row.get("Snippet") or "").replace("\n", " ").replace("\r", "").strip()
+        if snippet:
+            text = snippet[:200]
+        else:
+            url_raw = (row.get("Url") or "").strip()
+            text = _title_from_url(url_raw) if url_raw else ""
+
     sentiment = (row.get("Sentiment") or "neutral").lower()
     if sentiment not in ("positive", "negative", "neutral"):
         sentiment = "neutral"
@@ -139,6 +176,53 @@ def build_compliance_queue(mentions: list[dict], max_items: int = 10) -> list[di
         }
         for m in items[:max_items]
     ]
+
+
+TIER_RANK = {"L4": 4, "L3": 3, "L2": 2, "L1": 1}
+
+
+def build_ticket_candidates(mentions: list[dict], max_items: int = 10) -> list[dict]:
+    """Top L2/L3/L4 mentions enriched with all fields create_ticket() needs."""
+    items = [m for m in mentions if m["tier"] in ("L2", "L3", "L4")]
+    items.sort(
+        key=lambda m: (TIER_RANK.get(m["tier"], 0), m["engagement"]),
+        reverse=True,
+    )
+    candidates = []
+    for i, m in enumerate(items[:max_items], 1):
+        text = m["text"] or ""
+        candidates.append({
+            "id":                 f"bw-{i:03d}",
+            "platform":           m["platform"],
+            "author":             m["author"],
+            "summary":            text[:80],
+            "sentiment":          m["sentiment"],
+            "sentiment_reasoning": f"Negative sentiment from Brandwatch export ({m['platform']})",
+            "risk_level":         m["tier"],
+            "risk_reasoning":     (
+                f"{m['tier']}: negative mention on {m['platform']}"
+                + (f" with {m['engagement']} engagements" if m["engagement"] else "")
+            ),
+            "raw_text":           text,
+            "raw_text_redacted":  text,
+            "engagement":         m["engagement"],
+            "posted_at":          m["date"],
+            "url":                m["url"],
+            "has_client_info":    False,
+            "watch_flags":        "",
+        })
+    return candidates
+
+
+def build_watch_counts(mentions: list[dict]) -> list[dict]:
+    """Count mentions containing each Julie watch-list term across all 1778 mentions."""
+    results = []
+    for term, tier in WATCH_TERMS.items():
+        term_lower = term.lower()
+        count = sum(1 for m in mentions if term_lower in (m["text"] or "").lower())
+        results.append({"term": term, "count": count, "tier": tier})
+    results.sort(key=lambda x: (-x["count"], x["term"]))
+    return results
 
 
 def main():
@@ -191,17 +275,22 @@ def main():
         "compliance_queue": build_compliance_queue(sel),
     }
 
+    ticket_candidates = build_ticket_candidates(mentions)
+    watch_counts      = build_watch_counts(mentions)
+
     output = {
-        "generated":      "2026-04-30",
-        "period":         "Apr 1 – Apr 30 2026",
-        "total":          total,
-        "positive":       positive,
-        "negative":       negative,
-        "neutral":        neutral,
-        "recent_mentions": recent_mentions,
+        "generated":        "2026-04-30",
+        "period":           "Apr 1 – Apr 30 2026",
+        "total":            total,
+        "positive":         positive,
+        "negative":         negative,
+        "neutral":          neutral,
+        "recent_mentions":  recent_mentions,
         "compliance_queue": compliance_queue,
-        "platform_counts": platform_counts,
-        "axi_select":     axi_select,
+        "platform_counts":  platform_counts,
+        "ticket_candidates": ticket_candidates,
+        "watch_counts":     watch_counts,
+        "axi_select":       axi_select,
     }
 
     OUTPUT_PATH.write_text(
@@ -214,6 +303,9 @@ def main():
     print(f"  Axi Select: {sel_total} mentions | {sel_positive} pos | {sel_negative} neg")
     print(f"  By tier:    {axi_select['by_tier']}")
     print(f"  By platform (top 5): {axi_select['by_platform'][:5]}")
+    print(f"  Ticket candidates: {len(ticket_candidates)}")
+    watch_active = [w for w in watch_counts if w["count"] > 0]
+    print(f"  Watch terms active: {len(watch_active)}/{len(watch_counts)}")
 
 
 if __name__ == "__main__":
