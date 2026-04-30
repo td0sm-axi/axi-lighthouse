@@ -364,5 +364,5 @@ ANTHROPIC_API_KEY=        # shared with Som's enrichment
 - Confirm forum routing: a Reddit/Telegram mention must get `routing_status = PENDING_HUMAN_POST` regardless of tier
 - Confirm L4 gets `PENDING_HUMAN_POST` with a drafted response — not blocked from drafting
 - Confirm `routing_status` is set correctly across both paths: `PENDING_AUTO_RESPOND` (L1/L2 standard platform) / `PENDING_HUMAN_POST` (everything else)
-- Run validation harness (Phase 7): export 30 days of real Axi mention data, classify all, review every label manually
+- Run validation harness (Phase 7): use `data/brandwatch_mentions.csv` (produced by Som's Phase 0 BrandWatch connector) as the 30-day mention export; classify all rows, review every label manually
 - Iterate on prompts until tier accuracy is acceptable before enabling live mode

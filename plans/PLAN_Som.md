@@ -18,6 +18,10 @@ Som owns the first two stages of the Lighthouse pipeline. The crawler layer coll
 ## Architecture Position
 
 ```
+[Phase 0 — Prototype]
+BrandWatch API  ──► crawlers/brandwatch.py  ──► data/brandwatch_mentions.csv  ──► prototype/dashboard.html
+
+[Phase 1+ — Production]
 Scheduler (APScheduler)
     │
     ▼
@@ -38,18 +42,19 @@ One scraper module per platform. All scrapers implement the same interface and r
 
 ### Platforms & Methods
 
-| Platform | Library / Method |
-|---|---|
-| Reddit | `praw` (official Reddit API) |
-| TrustPilot | `playwright` headless scrape (no public API) |
-| ForexPeaceArmy / BabyPips | `playwright` headless scrape |
-| X (Twitter) | X API v2 — search recent tweets |
-| Facebook / Instagram | Meta Graph API — page mentions + comments |
-| TikTok | TikTok Research API |
-| LinkedIn | LinkedIn API — brand mentions |
-| Google Play | `google-play-scraper` Python library |
-| Apple App Store | `app-store-scraper` Python library |
-| News / Web | Google Custom Search API or SerpAPI |
+| Platform | Library / Method | Phase |
+|---|---|---|
+| **BrandWatch** | **BrandWatch API v2 — Axi brand query** | **Phase 0 — Prototype** |
+| Reddit | `praw` (official Reddit API) | Phase 2 |
+| TrustPilot | `playwright` headless scrape (no public API) | Phase 2 |
+| ForexPeaceArmy / BabyPips | `playwright` headless scrape | Phase 2 |
+| X (Twitter) | X API v2 — search recent tweets | Phase 2 |
+| Facebook / Instagram | Meta Graph API — page mentions + comments | Phase 2 |
+| TikTok | TikTok Research API | Phase 2 |
+| LinkedIn | LinkedIn API — brand mentions | Phase 2 |
+| Google Play | `google-play-scraper` Python library | Phase 2 |
+| Apple App Store | `app-store-scraper` Python library | Phase 2 |
+| News / Web | Google Custom Search API or SerpAPI | Phase 2 |
 
 ### Common Output Schema
 
@@ -118,6 +123,7 @@ with BrowserPool(max_concurrent=3) as pool:
 crawlers/
   __init__.py
   base.py               # BaseCrawler abstract class with common interface
+  brandwatch.py         # Phase 0 — BrandWatch API connector; writes to CSV (prototype) or DB (production)
   runner.py             # parallel executor — ThreadPoolExecutor + BrowserPool
   reddit.py
   trustpilot.py
@@ -128,6 +134,12 @@ crawlers/
   linkedin.py
   app_stores.py         # Google Play + App Store combined
   web.py                # Google Custom Search / SerpAPI
+
+scripts/
+  bw_to_csv.py          # Phase 0 — maps BrandWatch response to CSV schema; dedupes on mention ID
+
+data/
+  brandwatch_mentions.csv   # Phase 0 output; retired once PostgreSQL pipeline is live
 ```
 
 ---
@@ -184,6 +196,14 @@ crawler_runs
 
 ## Build Checklist
 
+### Phase 0 — BrandWatch Prototype
+- [ ] `crawlers/brandwatch.py` — authenticate with BrandWatch API (`BRANDWATCH_API_KEY`, `BRANDWATCH_PROJECT_ID`); query for Axi mentions; map each result to common mention schema
+- [ ] `scripts/bw_to_csv.py` — write mapped mentions to `data/brandwatch_mentions.csv`; skip rows where BrandWatch mention ID already exists in CSV
+- [ ] `prototype_server.py` — minimal Flask app with `/api/mentions` route that reads CSV and serves rows as JSON for `prototype/dashboard.html`
+- [ ] APScheduler job (every 30 min) in `prototype_server.py` — re-runs `bw_to_csv.py` to keep CSV current
+- [ ] Test in isolation: run `python -m crawlers.brandwatch` and confirm CSV is populated with correct schema
+- [ ] Confirm deduplication: run connector twice in a row, confirm row count does not increase on second run
+
 ### Phase 1 — Foundation
 - [ ] Create `crawlers/` directory with `base.py` abstract class
 - [ ] `crawlers/runner.py` — `ThreadPoolExecutor` for API crawlers + `BrowserPool` (max 3) for Playwright crawlers; writes results to DB as each future completes
@@ -214,6 +234,10 @@ crawler_runs
 ## Environment Variables (Som's section)
 
 ```
+# BrandWatch (Phase 0 — Prototype)
+BRANDWATCH_API_KEY=
+BRANDWATCH_PROJECT_ID=
+
 # Reddit
 REDDIT_CLIENT_ID=
 REDDIT_CLIENT_SECRET=
@@ -250,6 +274,9 @@ ANTHROPIC_API_KEY=
 
 ## Verification
 
+- Run BrandWatch connector in isolation: `python -m crawlers.brandwatch` — confirm `data/brandwatch_mentions.csv` is created and rows match the CSV schema
+- Run connector twice — confirm duplicate rows are not created (dedup on BrandWatch mention ID)
+- Start `prototype_server.py` and open `prototype/dashboard.html` — confirm mentions from CSV appear in the UI
 - Run each crawler in isolation: `python -m crawlers.reddit` — confirm output matches the common schema
 - Run enrichment on a single hardcoded mention — confirm screenshot saved and summary generated
 - Check PostgreSQL: `SELECT platform, COUNT(*) FROM mentions GROUP BY platform;`
