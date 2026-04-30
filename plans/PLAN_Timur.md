@@ -397,16 +397,17 @@ File: `app.py`, `templates/`, `static/`
 
 APScheduler running in-process within the Flask app.
 
-| Job | Cadence | What it does |
-|---|---|---|
-| Crawler + enrichment | Every 30 minutes | Triggers Som's crawlers across all platforms; new mentions written to DB immediately |
-| Classification | Continuous | Julie's pipeline polls for unclassified mentions every 60 seconds; classifies and routes each one as it arrives — no batching |
-| Response agent | Continuous | Polls for `PENDING_AUTO_RESPOND` mentions every 60 seconds; posts replies as they are classified |
-| Notifications | Event-driven | Fires immediately when classification writes L3 or L4 — no polling delay |
-| SLA checker | Every 12 hours | Finds unresolved L3/L4 mentions; sends reminders at 12h intervals; sets `sla_breached = True` and fires escalation alert at 24h |
-| Thread monitor | Daily | Checks for new replies on all AUTO_RESPONDED threads |
-| Jira sync | Hourly | Syncs Jira ticket statuses to local DB |
-| Weekly digest email | Monday 08:00 | Weekly summary to Julie + `DIGEST_RECIPIENTS` — what Axi responded to, what was left unanswered, what's trending |
+| Job | Cadence | What it does | Phase |
+|---|---|---|---|
+| BrandWatch CSV update | Every 30 minutes | Runs `scripts/bw_to_csv.py` — fetches new Axi mentions from BrandWatch API, appends to `data/brandwatch_mentions.csv` with dedup; feeds `prototype/dashboard.html` | Phase 0 — retired when production DB is live |
+| Crawler + enrichment | Every 30 minutes | Triggers Som's crawlers across all platforms; new mentions written to DB immediately | Phase 1+ |
+| Classification | Continuous | Julie's pipeline polls for unclassified mentions every 60 seconds; classifies and routes each one as it arrives — no batching | Phase 1+ |
+| Response agent | Continuous | Polls for `PENDING_AUTO_RESPOND` mentions every 60 seconds; posts replies as they are classified | Phase 1+ |
+| Notifications | Event-driven | Fires immediately when classification writes L3 or L4 — no polling delay | Phase 1+ |
+| SLA checker | Every 12 hours | Finds unresolved L3/L4 mentions; sends reminders at 12h intervals; sets `sla_breached = True` and fires escalation alert at 24h | Phase 1+ |
+| Thread monitor | Daily | Checks for new replies on all AUTO_RESPONDED threads | Phase 1+ |
+| Jira sync | Hourly | Syncs Jira ticket statuses to local DB | Phase 1+ |
+| Weekly digest email | Monday 08:00 | Weekly summary to Julie + `DIGEST_RECIPIENTS` — what Axi responded to, what was left unanswered, what's trending | Phase 1+ |
 
 File: `scheduler.py`
 
@@ -532,8 +533,14 @@ notifications
 - [ ] `prompts/digest_summary.txt` — Claude prompt for the trending narrative section
 - [ ] `digest/sender.py` — SMTP send to `DIGEST_RECIPIENTS`; HTML email matching Lighthouse dark theme
 
+### Phase 0 — Prototype Scheduler (BrandWatch CSV)
+- [ ] `prototype_server.py` — minimal Flask app + APScheduler; BrandWatch CSV update job runs every 30 min
+- [ ] `/api/mentions` route — reads `data/brandwatch_mentions.csv` and serves rows as JSON for `prototype/dashboard.html`
+- [ ] Confirm `prototype/dashboard.html` loads and displays live BrandWatch data after first run
+
 ### Phase 7 — Scheduler + Hardening
-- [ ] `scheduler.py` — APScheduler setup, all jobs wired
+- [ ] `scheduler.py` — APScheduler setup, all production jobs wired (BrandWatch CSV job removed or migrated to DB write)
+- [ ] Retire `prototype_server.py` and `data/brandwatch_mentions.csv` — update `crawlers/brandwatch.py` to write to PostgreSQL
 - [ ] Rotate default credentials before sharing dashboard access
 - [ ] Confirm compliance PII sign-off before enabling live mode
 - [ ] End-to-end test: trigger full pipeline manually, confirm mention flows from crawl → classify → reply/queue → Jira → dashboard

@@ -8,6 +8,25 @@ Lighthouse v1 is a brand intelligence and social response service for Axi. It co
 
 ## Architecture Overview
 
+### Phase 0 — Prototype (Unblocks Frontend Immediately)
+
+```
+BrandWatch API
+    │
+    ▼
+[0] BrandWatch Connector   — fetches Axi mentions via BrandWatch API every 30 min
+    │
+    ▼
+data/brandwatch_mentions.csv   — append-only, deduped on mention ID
+    │
+    ▼
+prototype/dashboard.html       — reads CSV; gives frontend a working data source now
+```
+
+This layer exists only during the prototype phase. Once the production crawlers and PostgreSQL are live (Phase 2+), the CSV is retired and the dashboard reads from the DB.
+
+### Phase 1+ — Production Pipeline
+
 ```
 Scheduler (APScheduler)
     │
@@ -33,6 +52,24 @@ Scheduler (APScheduler)
 ---
 
 ## Component Breakdown
+
+### 0. BrandWatch Prototype Layer
+
+Runs during the prototype phase only. Gives the frontend a real data source before any custom crawlers are built.
+
+- **Connector** (`crawlers/brandwatch.py`): authenticates with the BrandWatch API using `BRANDWATCH_API_KEY` + `BRANDWATCH_PROJECT_ID`, queries for Axi mentions, and maps each result to the common mention schema
+- **CSV writer** (`scripts/bw_to_csv.py`): appends new rows to `data/brandwatch_mentions.csv`; deduplicates on BrandWatch mention ID so repeated runs never create duplicates
+- **Schedule**: APScheduler triggers the connector every 30 minutes — same cadence as the production crawlers
+- **Dashboard**: `prototype/dashboard.html` reads directly from the CSV via a lightweight local Flask route (`/api/mentions`)
+- **Migration path**: when Phase 2 production crawlers go live, `crawlers/brandwatch.py` is updated to write to PostgreSQL instead of CSV and the prototype dashboard is retired
+
+CSV schema (maps to the common mention schema):
+
+```
+id, platform, url, author, posted_at, raw_text, title, sentiment, engagement_count
+```
+
+`sentiment` is sourced directly from BrandWatch's own classification — it is used only for prototype display and is replaced by Julie's classification pipeline once the production flow is live.
 
 ### 1. Crawler Layer
 
@@ -184,6 +221,13 @@ response_templates
 
 ## Build Phases
 
+### Phase 0 — BrandWatch Prototype (Unblocks Frontend)
+- [ ] `crawlers/brandwatch.py` — BrandWatch API connector; authenticate, query Axi mentions, map to common schema
+- [ ] `scripts/bw_to_csv.py` — append new rows to `data/brandwatch_mentions.csv`; dedup on BrandWatch mention ID
+- [ ] Flask route `/api/mentions` in a minimal `prototype_server.py` — serves CSV rows as JSON for `prototype/dashboard.html`
+- [ ] APScheduler job (every 30 min) — keeps CSV current; runs alongside production scheduler once Phase 7 is live
+- [ ] Add `BRANDWATCH_API_KEY` and `BRANDWATCH_PROJECT_ID` to `.env.example`
+
 ### Phase 1 — Foundation
 - [ ] Repo structure, `.env.example`, `requirements.txt`
 - [ ] PostgreSQL schema + SQLAlchemy models
@@ -244,7 +288,7 @@ response_templates
 ## Verification
 
 - Run crawler in isolation per platform, confirm output schema matches
-- Run classification pipeline against 30-day Brandwatch export, review every label manually
+- Run classification pipeline against 30-day BrandWatch export — use the CSV produced by `scripts/bw_to_csv.py` as the source; review every label manually
 - Test translation stage with non-English mentions (Arabic, Spanish, Portuguese, Thai — key Axi markets); confirm translated text is accurate before downstream classification runs on it
 - Test sentiment classification on a sample of TrustPilot and App Store reviews; verify positive/negative accuracy matches human labels
 - Test auto-reply end-to-end on a sandbox Reddit account before enabling on live accounts
