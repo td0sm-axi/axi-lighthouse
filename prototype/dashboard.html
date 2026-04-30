@@ -68,7 +68,19 @@
       white-space: nowrap;
     }
     nav a:hover { color: var(--text); }
-    nav a.active { color: var(--text); }
+    nav a.active { color: var(--text); border-bottom: 2px solid var(--text); padding-bottom: 2px; }
+    .nav-select-badge {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      background: var(--text);
+      color: white;
+      padding: 1px 6px;
+      border-radius: 2px;
+      margin-left: 5px;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
     .badge-alert {
       background: var(--l4);
       color: white;
@@ -471,7 +483,8 @@
   <div class="nav-brand">Axi &nbsp;/&nbsp; Lighthouse</div>
   <div class="nav-divider"></div>
   <div class="nav-links">
-    <a href="#" class="active">Overview</a>
+    <a href="#" class="active" onclick="showTab('main', this)">Overview</a>
+    <a href="#" onclick="showTab('select', this)">Axi Select <span class="nav-select-badge">S</span></a>
     <a href="#">Mentions</a>
     <a href="#">Compliance <span class="badge-alert">4</span></a>
     <a href="#">Watch List</a>
@@ -484,6 +497,7 @@
   </div>
 </nav>
 
+<div id="tab-main">
 <div class="page">
 
   <div class="page-header">
@@ -612,6 +626,48 @@
   </div>
 
 </div>
+</div> <!-- /tab-main -->
+
+<!-- AXI SELECT TAB -->
+<div id="tab-select" style="display:none">
+<div class="page">
+  <div class="page-header">
+    <h1>Axi Select</h1>
+    <p id="selectPeriod"></p>
+  </div>
+  <div class="stats-grid" id="selectStatsGrid"></div>
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header">
+        <h2>Axi Select mentions</h2>
+        <a href="#">View all →</a>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Mention</th><th>Platform</th><th>Tier</th><th>Eng</th><th>Time</th></tr>
+        </thead>
+        <tbody id="selectMentionsTbody"></tbody>
+      </table>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Compliance queue</h2>
+          <a href="#">View all →</a>
+        </div>
+        <div id="selectComplianceList"></div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-header">
+          <h2>Top platforms</h2>
+        </div>
+        <div id="selectPlatformList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div> <!-- /tab-select -->
+
 <script>
   // ── Date picker ──────────────────────────────────────────────────────────────
   function toggleDatePicker() {
@@ -743,6 +799,81 @@
   const l4count = DATA.compliance_queue.filter(c => c.tier === 'L4').length;
   const badge = document.querySelector('.badge-alert');
   if (badge) badge.textContent = l4count;
+
+  // ── Tab switching ─────────────────────────────────────────────────────────────
+  function showTab(tab, el) {
+    event.preventDefault();
+    document.getElementById('tab-main').style.display   = tab === 'main'   ? '' : 'none';
+    document.getElementById('tab-select').style.display = tab === 'select' ? '' : 'none';
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    el.classList.add('active');
+    if (tab === 'select') renderSelect();
+  }
+
+  // ── Axi Select tab ────────────────────────────────────────────────────────────
+  function renderSelect() {
+    const isSelect = m => (m.text || m.title || '').toLowerCase().includes('select');
+    const mentions  = DATA.recent_mentions.filter(isSelect);
+    const queue     = DATA.compliance_queue.filter(isSelect);
+
+    // platform breakdown
+    const platforms = {};
+    mentions.forEach(m => { platforms[m.platform] = (platforms[m.platform] || 0) + 1; });
+    const platformList = Object.entries(platforms).sort((a,b) => b[1]-a[1]);
+
+    const pos  = mentions.filter(m => m.sentiment === 'positive').length;
+    const neg  = mentions.filter(m => m.sentiment === 'negative').length;
+    const tot  = mentions.length;
+
+    document.getElementById('selectPeriod').textContent = DATA.period + ' · ' + tot + ' mentions containing "Axi Select"';
+
+    document.getElementById('selectStatsGrid').innerHTML = `
+      <div class="stat-card total"><div class="label">Total</div><div class="value">${tot}</div><div class="sub">${DATA.period}</div></div>
+      <div class="stat-card l4"><div class="tier-indicator"></div><div class="label">L4 — Crisis</div><div class="value">${mentions.filter(m=>m.tier==='L4').length}</div><div class="sub">Respond within 6h</div></div>
+      <div class="stat-card l3"><div class="tier-indicator"></div><div class="label">L3 — Serious</div><div class="value">${mentions.filter(m=>m.tier==='L3').length}</div><div class="sub">Respond within 24h</div></div>
+      <div class="stat-card l2"><div class="tier-indicator"></div><div class="label">L2 — Complaint</div><div class="value">${mentions.filter(m=>m.tier==='L2').length}</div><div class="sub">Respond within 24h</div></div>
+      <div class="stat-card l1"><div class="tier-indicator"></div><div class="label">L1 — Monitor</div><div class="value">${mentions.filter(m=>m.tier==='L1').length}</div><div class="sub">Auto-handled</div></div>
+      <div class="stat-card positive"><div class="tier-indicator"></div><div class="label">Positive</div><div class="value">${pos}</div><div class="sub">${tot ? Math.round(pos/tot*100) : 0}% of total</div></div>
+      <div class="stat-card negative"><div class="tier-indicator"></div><div class="label">Negative</div><div class="value">${neg}</div><div class="sub">${tot ? Math.round(neg/tot*100) : 0}% of total</div></div>`;
+
+    document.getElementById('selectMentionsTbody').innerHTML = mentions.length
+      ? mentions.map(m => `
+          <tr onclick="window.open('${esc(m.url)}','_blank')">
+            <td>
+              <div class="mention-text"><span class="sentiment-dot ${esc(m.sentiment)}"></span>${esc(m.text)}</div>
+              <div class="mention-meta">@${esc(m.author)}</div>
+            </td>
+            <td><span class="platform-tag">${esc(m.platform)}</span></td>
+            <td><span class="tier-badge ${tierClass(m.tier)}">${esc(m.tier)}</span></td>
+            <td class="eng">${m.engagement > 0 ? m.engagement.toLocaleString() : '—'}</td>
+            <td class="time">${timeAgo(m.date)}</td>
+          </tr>`).join('')
+      : '<tr><td colspan="5" style="padding:20px 24px;color:var(--muted)">No Axi Select mentions in this period.</td></tr>';
+
+    document.getElementById('selectComplianceList').innerHTML = queue.length
+      ? queue.map(c => `
+          <div class="compliance-item">
+            <div><span class="tier-badge ${tierClass(c.tier)}">${esc(c.tier)}</span></div>
+            <div class="compliance-body">
+              <div class="compliance-title">${esc(c.title)}</div>
+              <div class="compliance-meta">${esc(c.platform)} · ${c.engagement > 0 ? c.engagement + ' eng' : 'low eng'} · ${timeAgo(c.date)}</div>
+              <div class="compliance-actions">
+                <button class="btn btn-primary">Review draft</button>
+                <button class="btn btn-ghost">Escalate</button>
+              </div>
+            </div>
+          </div>`).join('')
+      : '<div class="watch-quiet">No items in compliance queue.</div>';
+
+    document.getElementById('selectPlatformList').innerHTML = platformList.length
+      ? platformList.map(([p, c]) => `
+          <div class="runs-row">
+            <div class="run-status"></div>
+            <div class="run-platform">${esc(p)}</div>
+            <div class="run-count">${c} mention${c !== 1 ? 's' : ''}</div>
+          </div>`).join('')
+      : '<div class="watch-quiet">No data.</div>';
+  }
 </script>
 </body>
 </html>
