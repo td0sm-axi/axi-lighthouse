@@ -2,8 +2,13 @@
 .env
 *.env
 .env.*
+!.env.example
 api keys/
 secrets/
+
+# Database
+*.db
+*.sqlite
 
 # Python
 __pycache__/
